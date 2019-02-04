@@ -1,0 +1,493 @@
+# -*- coding: utf-8 -*-
+#
+# (C) Copyright 2017 SixSq (http://sixsq.com/).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+"""
+ Python wrapper of the SlipStream API (http://ssapi.sixsq.com).
+
+
+ Install
+ -------
+
+ Latest release from pypi
+ ~~~~~~~~~~~~~~~~~~~~~~~~
+ .. code-block:: Bash
+
+   $ pip install slipstream-api
+
+ Most recent version from source code
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ .. code-block:: Bash
+
+   $ pip install 'https://github.com/slipstream/SlipStreamPythonAPI/archive/master.zip'
+
+
+ Usage
+ -----
+ To use this library, import it and instanciate it.
+ Then use one of the method to login.::
+    from slipstream.api import Api
+
+    api = Api()
+
+    api.login_internal('username', 'password')
+
+
+ Examples
+ --------
+
+ Login on Nuvla with username and password
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ ::
+
+    api.login_internal('username', 'password')
+
+
+ Login on Nuvla with key and secret
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ ::
+
+    api.login_apikey('credential/ce02ef40-1342-4e68-838d-e1b2a75adb1e',
+                     'the-secret-key')
+
+
+ API documentation
+ -----------------
+
+"""
+
+from __future__ import absolute_import
+
+import os
+import stat
+import logging
+
+import requests
+from requests.cookies import MockRequest
+from requests.exceptions import HTTPError
+
+from six.moves.urllib.parse import urlparse
+from six.moves.http_cookiejar import MozillaCookieJar
+
+from . import models
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_ENDPOINT = 'https://nuv.la'
+DEFAULT_COOKIE_FILE = os.path.expanduser('~/.slipstream/cookies.txt')
+HREF_SESSION_TMPL_INTERNAL = 'session-template/internal'
+HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
+
+
+class SlipStreamError(Exception):
+    def __init__(self, reason, response=None):
+        super(SlipStreamError, self).__init__(reason)
+        self.reason = reason
+        self.response = response
+
+
+class SessionStore(requests.Session):
+    """A ``requests.Session`` subclass implementing a file-based session store."""
+
+    def __init__(self, endpoint, reauthenticate, cookie_file=None, login_params=None):
+        super(SessionStore, self).__init__()
+        self.session_base_url = '{0}/api/session'.format(endpoint)
+        self.reauthenticate = reauthenticate
+        self.login_params = login_params
+        if cookie_file is None:
+            cookie_file = DEFAULT_COOKIE_FILE
+        cookie_dir = os.path.dirname(cookie_file)
+        self.cookies = MozillaCookieJar(cookie_file)
+        # Create the $HOME/.slipstream dir if it doesn't exist
+        if not os.path.isdir(cookie_dir):
+            os.mkdir(cookie_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        # Load existing cookies if the cookies.txt exists
+        if os.path.isfile(cookie_file):
+            self.cookies.load(ignore_discard=True)
+            self.cookies.clear_expired_cookies()
+
+    def need_to_login(self, accessed_url, status_code):
+        return self.reauthenticate and status_code in [401, 403] and accessed_url != self.session_base_url
+
+    def _request(self, *args, **kwargs):
+        return super(SessionStore, self).request(*args, **kwargs)
+
+    def request(self, *args, **kwargs):
+        response = self._request(*args, **kwargs)
+
+        if not self.verify and response.cookies:
+            self._unsecure_cookie(args[1], response)
+        if 'Set-Cookie' in response.headers:
+            self.cookies.save(ignore_discard=True)
+
+        url = args[1]
+        if self.need_to_login(url, response.status_code):
+            login_response = self.cimi_login(self.login_params)
+            if login_response is not None and login_response.status_code == 201:
+                # retry the call after reauthentication
+                response = self._request(*args, **kwargs)
+
+        return response
+
+    def cimi_login(self, login_params):
+        self.login_params = login_params
+        if self.login_params:
+            return self.request('POST', self.session_base_url,
+                                headers={'Content-Type': 'application/json',
+                                         'Accept': 'application/json'},
+                                json={'sessionTemplate': login_params})
+        else:
+            return None
+
+    def _unsecure_cookie(self, url_str, response):
+        url = urlparse(url_str)
+        if url.scheme == 'http':
+            for cookie in response.cookies:
+                cookie.secure = False
+                self.cookies.set_cookie_if_ok(cookie, MockRequest(response.request))
+
+    def clear(self, domain):
+        """Clear cookies for the specified domain."""
+        try:
+            self.cookies.clear(domain)
+            self.cookies.save()
+        except KeyError:
+            pass
+
+
+def to_login_params(creds):
+    """
+    :param creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
+    :return: dict extended with the right 'href' or an empty dict
+    """
+    if not creds:
+        return {}
+    if ('username' in creds) and ('password' in creds):
+        creds.update({'href': HREF_SESSION_TMPL_INTERNAL})
+    elif ('key' in creds) and ('secret' in creds):
+        creds.update({'href': HREF_SESSION_TMPL_APIKEY})
+    else:
+        return {}
+    return creds
+
+
+class Api(object):
+    """ This class is a Python wrapper&helper of the native SlipStream REST API"""
+
+    CIMI_PARAMETERS_NAME = ['first', 'last', 'filter', 'select', 'expand', 'orderby', 'aggregation']
+
+    def __init__(self, endpoint=DEFAULT_ENDPOINT, cookie_file=None, insecure=False, reauthenticate=False,
+                 login_creds=None):
+        """
+        :param endpoint: SlipStream endpoint (https://nuv.la).
+        :param cookie_file: cookie jar file
+        :param insecure: don't check server certificate.
+        :param reauthenticate: reauthenticate in case of requets failures with status code 401 or 403.
+        :param login_creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
+        """
+        self.endpoint = endpoint
+        self.session = SessionStore(endpoint, reauthenticate, cookie_file=cookie_file,
+                                    login_params=to_login_params(login_creds))
+        self.session.verify = not insecure
+        self.session.headers.update({'Accept': 'application/xml'})
+        if insecure:
+            try:
+                requests.packages.urllib3.disable_warnings(
+                    requests.packages.urllib3.exceptions.InsecureRequestWarning)
+            except:
+                import urllib3
+                urllib3.disable_warnings(
+                    urllib3.exceptions.InsecureRequestWarning)
+        self._username = None
+        self._cimi_cloud_entry_point = None
+
+    def login(self, login_params):
+        """Uses given 'login_params' to log into the SlipStream server. The
+        'login_params' must be a map containing an "href" element giving the id of
+        the sessionTemplate resource and any other attributes required for the
+        login method. E.g.:
+
+        {"href" : "session-template/internal",
+         "username" : "username",
+         "password" : "password"}
+         or
+        {"href" : "session-template/api-key",
+         "key" : "key",
+         "secret" : "secret"}
+
+        Returns server response as dict. Successful responses will contain a
+        `status` code of 201 and the `resource-id` of the created session.
+
+        :param   login_params: {"href": "session-template/...", <creds>}
+        :type    login_params: dict
+        :return: Server response.
+        :rtype:  dict
+
+        """
+        return self.session.cimi_login(login_params)
+
+    def login_internal(self, username, password):
+        """Login to the server using username and password.
+
+        :param username:
+        :param password:
+        :return: see login()
+        """
+        self._username = username
+        return self.login(to_login_params({'username': username,
+                                           'password': password}))
+
+    def login_apikey(self, key, secret):
+        """Login to the server using API key/secret pair.
+
+        :param key: The Key ID (resource id).
+                    (example: credential/ce02ef40-1342-4e68-838d-e1b2a75adb1e)
+        :param secret: The Secret Key corresponding to the Key ID
+        :return: see login()
+        """
+        return self.login(to_login_params({'key': key,
+                                           'secret': secret}))
+
+    def logout(self):
+        """Logs user out by deleting session.
+        """
+        session_id = self.current_session()
+        if session_id is not None:
+            self._cimi_delete(session_id)
+        self.session.login_params = None
+        self._username = None
+
+    def current_session(self):
+        """Returns current user session or None.
+
+        :return: Current user session.
+        :rtype: str
+        """
+        resource_type = 'sessions'
+        session = self.cimi_search(resource_type)
+        if session and session.count > 0:
+            return session.sessions[0].get('id')
+        else:
+            return None
+
+    def is_authenticated(self):
+        return self.current_session() is not None
+
+    def _cimi_get_cloud_entry_point(self):
+        cep_json = self._cimi_get('cloud-entry-point')
+        return models.CloudEntryPoint(cep_json)
+
+    @property
+    def cimi_cloud_entry_point(self):
+        if self._cimi_cloud_entry_point is None:
+            self._cimi_cloud_entry_point = self._cimi_get_cloud_entry_point()
+        return self._cimi_cloud_entry_point
+
+    @classmethod
+    def _split_cimi_params(cls, params):
+        cimi_params = {}
+        other_params = {}
+        for key, value in params.items():
+            if key in cls.CIMI_PARAMETERS_NAME:
+                cimi_params['$' + key] = value
+            else:
+                other_params[key] = value
+        return cimi_params, other_params
+
+    @staticmethod
+    def _cimi_find_operation_href(cimi_resource, operation):
+        operation_href = cimi_resource.operations_by_name.get(operation, {}).get('href')
+
+        if not operation_href:
+            raise KeyError("Operation '{0}' not found.".format(operation))
+
+        return operation_href
+
+    def _cimi_get_uri(self, resource_id=None, resource_type=None):
+        if resource_id is None and resource_type is None:
+            raise TypeError("You have to specify 'resource_uri' or 'resource_type'.")
+
+        if resource_id is not None and resource_type is not None:
+            raise TypeError("You can only specify 'resource_uri' or 'resource_type', not both.")
+
+        if resource_type is not None:
+            resource_id = self.cimi_cloud_entry_point.entry_points.get(resource_type)
+            if resource_id is None:
+                raise KeyError("Resource type '{0}' not found.".format(resource_type))
+
+        return resource_id
+
+    def _cimi_request(self, method, uri, params=None, json=None, data=None):
+        response = self.session.request(method, '{0}/{1}/{2}'.format(self.endpoint, 'api', uri),
+                                        headers={'Accept': 'application/json'},
+                                        params=params,
+                                        json=json,
+                                        data=data)
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            try:
+                json_msg = e.response.json()
+                message = json_msg.get('message')
+                if message is None:
+                    error = json_msg.get('error')
+                    message = error.get('code') + ' - ' + error.get('reason')
+            except:
+                try:
+                    message = e.response.text
+                except:
+                    message = str(e)
+            raise SlipStreamError(message, response)
+
+        return response.json()
+
+    def _cimi_get(self, resource_id=None, resource_type=None, params=None):
+        uri = self._cimi_get_uri(resource_id, resource_type)
+        return self._cimi_request('GET', uri, params=params)
+
+    def _cimi_post(self, resource_id=None, resource_type=None, params=None, json=None, data=None):
+        uri = self._cimi_get_uri(resource_id, resource_type)
+        return self._cimi_request('POST', uri, params=params, json=json, data=data)
+
+    def _cimi_put(self, resource_id=None, resource_type=None, params=None, json=None, data=None):
+        uri = self._cimi_get_uri(resource_id, resource_type)
+        return self._cimi_request('PUT', uri, params=params, json=json, data=data)
+
+    def _cimi_delete(self, resource_id=None):
+        return self._cimi_request('DELETE', resource_id)
+
+    def cimi_get(self, resource_id, **kwargs):
+        """ Retreive a CIMI resource by it's resource id
+
+        :param      resource_id: The id of the resource to retrieve
+        :type       resource_id: str
+
+        :keyword    select: Select attributes to return. (resourceURI always returned)
+        :type       select: str or list of str
+
+        :return:    A CimiResource object corresponding to the resource
+        :rtype:     CimiResource
+        """
+        cimi_params, query_params = self._split_cimi_params(kwargs)
+        resp_json = self._cimi_get(resource_id=resource_id, params=cimi_params)
+        return models.CimiResource(resp_json)
+
+    def cimi_edit(self, resource_id, data, **kwargs):
+        """ Edit a CIMI resource by it's resource id
+
+        :param      resource_id: The id of the resource to edit
+        :type       resource_id: str
+
+        :param      data: The data to serialize into JSON
+        :type       data: dict
+
+        :keyword    select: Cimi select parameter, used to delete an existing attribute from a cimi resource when the
+                    selected fields are not present in the data argument (e.g description, value)
+        :type       select: str or list of str
+
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :rtype:     CimiResponse
+        """
+        resource = self.cimi_get(resource_id=resource_id)
+        operation_href = self._cimi_find_operation_href(resource, 'edit')
+        cimi_params, query_params = self._split_cimi_params(kwargs)
+        return models.CimiResponse(self._cimi_put(resource_id=operation_href, json=data, params=cimi_params))
+
+    def cimi_delete(self, resource_id):
+        """ Delete a CIMI resource by it's resource id
+
+        :param  resource_id: The id of the resource to delete
+        :type   resource_id: str
+
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :rtype:     CimiResponse
+
+        """
+        resource = self.cimi_get(resource_id=resource_id)
+        operation_href = self._cimi_find_operation_href(resource, 'delete')
+        return models.CimiResponse(self._cimi_delete(resource_id=operation_href))
+
+    def cimi_add(self, resource_type, data):
+        """ Add a CIMI resource to the specified resource_type (Collection)
+
+        :param      resource_type: Type of the resource (Collection name)
+        :type       resource_type: str
+
+        :param      data: The data to serialize into JSON
+        :type       data: dict
+
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :rtype:     CimiResponse
+        """
+        collection = self.cimi_search(resource_type=resource_type, last=0)
+        operation_href = self._cimi_find_operation_href(collection, 'add')
+        return models.CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
+
+    def cimi_search(self, resource_type, **kwargs):
+        """ Search for CIMI resources of the given type (Collection).
+
+        :param      resource_type: Type of the resource (Collection name)
+        :type       resource_type: str
+
+        :keyword    first: Start from the 'first' element (1-based)
+        :type       first: int
+
+        :keyword    last: Stop at the 'last' element (1-based)
+        :type       last: int
+
+        :keyword    filter: CIMI filter
+        :type       filter: str
+
+        :keyword    select: Select attributes to return. (resourceURI always returned)
+        :type       select: str or list of str
+
+        :keyword    expand: Expand linked resources (not implemented yet)
+        :type       expand: str or list of str
+
+        :keyword    orderby: Sort by the specified attribute
+        :type       orderby: str or list of str
+
+        :keyword    aggregation: CIMI aggregation
+        :type       aggregation: str (operator:field)
+
+        :return:    A CimiCollection object with the list of found resources available
+                    as a generator with the method 'resources()' or with the attribute 'resources_list'
+        :rtype:     CimiCollection
+        """
+        cimi_params, query_params = self._split_cimi_params(kwargs)
+        resp_json = self._cimi_put(resource_type=resource_type, data=cimi_params, params=query_params)
+        return models.CimiCollection(resp_json, resource_type)
+
+    def cimi_operation(self, resource_id, operation, data=None):
+        """ Execute an operation on a CIMI resource
+
+        :param      resource_id: The id of the resource to execute operation on
+        :type       resource_id: str
+
+        :param      operation: Operation name (e.g. describe)
+        :type       operation: str
+
+        :param      data: The data to serialize into JSON
+        :type       data: dict
+
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :rtype:     CimiResponse
+        """
+        resource = self.cimi_get(resource_id=resource_id)
+        operation_href = self._cimi_find_operation_href(resource, operation)
+        resp_json = self._cimi_post(operation_href, json=data)
+        return models.CimiResource(resp_json)
+
