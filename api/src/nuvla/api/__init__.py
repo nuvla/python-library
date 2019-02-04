@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
 
-from .api import Api, SlipStreamError, ConnectionError
+from .api import Api, NuvlaError, ConnectionError
 

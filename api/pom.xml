@@ -3,14 +3,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>SlipStreamPythonAPI-tarball</artifactId>
+  <artifactId>python-api-tarball</artifactId>
   <packaging>pom</packaging>
-  <name>SlipStreamPythonAPI/tarball</name>
+  <name>python-api/tarball</name>
   <url>http://sixsq.com</url>
 
   <parent>
-    <groupId>com.sixsq.slipstream</groupId>
-    <artifactId>SlipStreamPythonAPI</artifactId>
+    <groupId>sixsq.nuvla.python-api</groupId>
+    <artifactId>python-api</artifactId>
     <version>3.69-SNAPSHOT</version>
   </parent>
 

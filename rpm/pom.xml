@@ -2,14 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>SlipStreamPythonApi-RPM</artifactId>
-  <name>SlipStreamPythonAPI RPM</name>
+  <artifactId>python-api-rpm</artifactId>
+  <name>python-api/rpm</name>
   <packaging>pom</packaging>
   <url>http://sixsq.com/</url>
 
   <parent>
-    <groupId>com.sixsq.slipstream</groupId>
-    <artifactId>SlipStreamPythonAPI</artifactId>
+    <groupId>sixsq.nuvla.python-api</groupId>
+    <artifactId>python-api</artifactId>
     <version>3.69-SNAPSHOT</version>
   </parent>
 
@@ -27,8 +27,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>com.sixsq.slipstream</groupId>
-                  <artifactId>SlipStreamPythonAPI-tarball</artifactId>
+                  <groupId>sixsq.nuvla.python-api</groupId>
+                  <artifactId>python-api-tarball</artifactId>
                   <version>${project.version}</version>
                   <classifier>bundle</classifier>
                   <type>tar.gz</type>
@@ -46,8 +46,8 @@
               <outputDirectory>${project.build.directory}/api/</outputDirectory>
               <artifactItems>
                 <artifactItem>
-                  <groupId>com.sixsq.slipstream</groupId>
-                  <artifactId>SlipStreamPythonAPI-tarball</artifactId>
+                  <groupId>sixsq.nuvla.python-api</groupId>
+                  <artifactId>python-api-tarball</artifactId>
                   <version>${project.version}</version>
                   <classifier>bundle</classifier>
                   <type>tar.gz</type>
@@ -64,17 +64,17 @@
         <configuration>
           <classifier>${package.os}</classifier>
           <release>${BUILD_NUMBER}.${package.os}</release>
-          <summary>SlipStream Python API
+          <summary>Nuvla Python API
             %include %{_rpmconfigdir}/macros.python
           </summary>
-          <name>slipstream-python-api</name>
+          <name>nuvla-python-api</name>
           <group>Applications/Engineering</group>
           <vendor>SixSq</vendor>
           <packager>SixSq</packager>
           <license>Apache 2.0</license>
           <url>http://sixsq.com</url>
           <needarch>noarch</needarch>
-          <description>SlipStream Python Client Api.</description>
+          <description>Nuvla Python Client Api.</description>
           <requires>
             <require>python &gt;= 2.7</require>
           </requires>
@@ -85,17 +85,17 @@
             <mapping>
               <directory>%{py_sitedir}</directory>
               <filemode>644</filemode>
-              <username>slipstream</username>
-              <groupname>slipstream</groupname>
+              <username>nuvla</username>
+              <groupname>nuvla</groupname>
               <directoryIncluded>false</directoryIncluded>
               <sources>
                 <source>
                   <location>${project.build.directory}/api/src/</location>
                   <includes>
-                    <include>slipstream/**/*</include>
+                    <include>nuvla/**/*</include>
                   </includes>
                   <excludes>
-                    <exclude>slipstream/__init__.py</exclude>
+                    <exclude>nuvla/__init__.py</exclude>
                   </excludes>
                 </source>
               </sources>

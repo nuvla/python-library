@@ -16,16 +16,16 @@ version = '${project.version}'
 packages = find_packages(where='src/')
 
 setup(
-    name='slipstream-api',
+    name='nuvla-api',
     version=version,
     author="SixSq Sarl",
     author_email='support@sixsq.com',
-    url='http://sixsq.com/slipstream',
-    description="A wrapper to use SlipStream from Python programs.",
-    keywords='slipstream devops api',
+    url='http://sixsq.com/nuvla',
+    description="A wrapper to use Nuvla from Python programs.",
+    keywords='nuvla devops api',
     package_dir={'': 'src'},
     packages=find_packages('src'),
-    namespace_packages=['slipstream'],
+    namespace_packages=['nuvla'],
     zip_safe=False,
     license='Apache License, Version 2.0',
     include_package_data=True,

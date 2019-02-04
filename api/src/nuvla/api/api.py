@@ -26,20 +26,20 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~
  .. code-block:: Bash
 
-   $ pip install slipstream-api
+   $ pip install nuvla-api
 
  Most recent version from source code
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  .. code-block:: Bash
 
-   $ pip install 'https://github.com/slipstream/SlipStreamPythonAPI/archive/master.zip'
+   $ pip install 'https://github.com/nuvla/python-api/archive/master.zip'
 
 
  Usage
  -----
  To use this library, import it and instanciate it.
  Then use one of the method to login.::
-    from slipstream.api import Api
+    from nuvla.api import Api
 
     api = Api()
 
@@ -77,7 +77,7 @@ import logging
 
 import requests
 from requests.cookies import MockRequest
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 
 from six.moves.urllib.parse import urlparse
 from six.moves.http_cookiejar import MozillaCookieJar
@@ -87,14 +87,14 @@ from . import models
 logger = logging.getLogger(__name__)
 
 DEFAULT_ENDPOINT = 'https://nuv.la'
-DEFAULT_COOKIE_FILE = os.path.expanduser('~/.slipstream/cookies.txt')
+DEFAULT_COOKIE_FILE = os.path.expanduser('~/.nuvla/cookies.txt')
 HREF_SESSION_TMPL_INTERNAL = 'session-template/internal'
 HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
 
 
-class SlipStreamError(Exception):
+class NuvlaError(Exception):
     def __init__(self, reason, response=None):
-        super(SlipStreamError, self).__init__(reason)
+        super(NuvlaError, self).__init__(reason)
         self.reason = reason
         self.response = response
 
@@ -111,7 +111,7 @@ class SessionStore(requests.Session):
             cookie_file = DEFAULT_COOKIE_FILE
         cookie_dir = os.path.dirname(cookie_file)
         self.cookies = MozillaCookieJar(cookie_file)
-        # Create the $HOME/.slipstream dir if it doesn't exist
+        # Create the $HOME/.nuvla dir if it doesn't exist
         if not os.path.isdir(cookie_dir):
             os.mkdir(cookie_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         # Load existing cookies if the cookies.txt exists

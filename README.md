@@ -4,16 +4,16 @@ Python client for the SlipStream CIMI API.
 
 ## Installation
 
-  `$ pip install slipstream-api`
+  `$ pip install nuvla-api`
 
   or
 
-  `$ yum install slipstream-python-api`
+  `$ yum install nuvla-python-api`
 
 ## Usage
 
 ```python
-  from slipstream.api import Api
+  from nuvla.api import Api
   
   api = Api('https://nuv.la')
   
@@ -22,15 +22,8 @@ Python client for the SlipStream CIMI API.
   # or
   # Login with api-key & secret
   api.login_apikey('credential/uuid', 'secret')
-  
-  # List available applications from the App Store
-  api.list_applications()
-  
-  # Deploy an application and get its deployment ID
-  deployment_id = api.deploy('apps/WordPress/wordpress', cloud='exoscale-ch-gva')
 
-  # Terminate the deployment started above
-  api.terminate(deployment_id)
+  api.cimi_search('users')
 
   # Logout
   api.logout()
@@ -41,7 +34,7 @@ Python client for the SlipStream CIMI API.
 ### Development helper
 
 ```sh
-git clone https://github.com/slipstream/SlipStreamPythonAPI.git
+git clone https://github.com/nuvla/python-api.git
 cd SlipStreamPythonAPI/api/
 pip install --editable .
 ```
@@ -72,32 +65,32 @@ You can get the full documentation by typing:
 
 _Python shell/code_
 ```python
-from slipstream.api import Api
+from nuvla.api import Api
 help(Api)
 ```
 _Shell_
 ```sh
-pydoc slipstream.api.Api
+pydoc nuvla.api.Api
 ```
 
 Or for a specific function:
 
 _Python shell/code_
 ```python
-from slipstream.api import Api
-help(Api.deploy)
+from nuvla.api import Api
+help(Api.cimi_search)
 ```
 _Shell_
 ```sh
-pydoc slipstream.api.Api.deploy
+pydoc nuvla.api.Api.cimi_search
 ```
 
 Or to get only the docstring:
 
 _Python shell/code_
 ```python
-from slipstream.api import Api
-print Api.deploy.__doc__
+from nuvla.api import Api
+print Api.cimi_search.__doc__
 ```
 
 Currently there is no HTML version of the documentation, only
@@ -109,12 +102,12 @@ To run a local webserver with the documentation you can run:
 pydoc -p 8080 slipstream.api.Api
 ```
 and then
-[http://localhost/slipstream.api.api.html#Api](http://localhost/slipstream.api.api.html#Api)
+[http://localhost/nuvla.api.api.html#Api](http://localhost/nuvla.api.api.html#Api)
 
 ### Sphinx documentation
 
 There is a Sphinx documentation available at
-http://slipstream.github.io/SlipStreamPythonAPI
+http://nuvla.github.io/NuvlaPythonAPI
 
 #### Generate and publish the Sphinx documentation to GitHub Pages
 

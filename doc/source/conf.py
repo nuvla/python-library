@@ -21,7 +21,7 @@ import sys
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
-sys.path.insert(0, os.path.abspath('../../api/src/slipstream'))
+sys.path.insert(0, os.path.abspath('../../api/src/nuvla'))
 
 pomfile= ET.parse('../../pom.xml')
 _version = pomfile.getroot().find('{http://maven.apache.org/POM/4.0.0}version').text
@@ -326,7 +326,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'slipstreampythonapi', u'SlipStream Python API Documentation',
+    (master_doc, 'nuvlapythonapi', u'Nuvla Python API Documentation',
      [author], 1)
 ]
 

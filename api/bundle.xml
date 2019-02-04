@@ -11,8 +11,8 @@
 
     <fileSets>
         <fileSet>
-            <directory>${project.build.directory}/dist-bundle/slipstream</directory>
-            <outputDirectory>src/slipstream</outputDirectory>
+            <directory>${project.build.directory}/dist-bundle/nuvla</directory>
+            <outputDirectory>src/nuvla</outputDirectory>
             <includes>
                 <include>**/*.py</include>
             </includes>
