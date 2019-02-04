@@ -1,0 +1,92 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>SlipStreamPythonAPI-PyPi</artifactId>
+  <name>SlipStreamPythonAPI/pypi</name>
+  <packaging>pom</packaging>
+  <url>http://sixsq.com/</url>
+
+  <parent>
+    <groupId>com.sixsq.slipstream</groupId>
+    <artifactId>SlipStreamPythonAPI</artifactId>
+    <version>3.69-SNAPSHOT</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.sixsq.slipstream</groupId>
+      <artifactId>SlipStreamPythonAPI-tarball</artifactId>
+      <type>tar.gz</type>
+      <classifier>bundle</classifier>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+
+      <build>
+
+        <plugins>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+
+            <executions>
+              <execution>
+                <id>unpack</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/pypi-pkg/</outputDirectory>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>com.sixsq.slipstream</groupId>
+                      <artifactId>SlipStreamPythonAPI-tarball</artifactId>
+                      <version>${project.version}</version>
+                      <type>tar.gz</type>
+                      <classifier>bundle</classifier>
+                      <overWrite>true</overWrite>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>python</executable>
+              <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
+              <arguments>
+                <argument>setup.py</argument>
+                <!-- For 'upload' PyPi credentials have to be in ~/.pypirc -->
+                <argument>sdist</argument>
+                <argument>upload</argument>
+              </arguments>
+            </configuration>
+          </plugin>
+
+        </plugins>
+      </build>
+
+    </profile>
+  </profiles>
+
+</project>

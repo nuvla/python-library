@@ -1,0 +1,46 @@
+<assembly>
+    <id>bundle</id>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>${artifactId}</baseDirectory>
+
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}/dist-bundle/slipstream</directory>
+            <outputDirectory>src/slipstream</outputDirectory>
+            <includes>
+                <include>**/*.py</include>
+            </includes>
+            <fileMode>0644</fileMode>
+        </fileSet>
+    </fileSets>
+
+    <files>
+        <file>
+            <source>${project.build.directory}/dist-bundle/setup.py</source>
+            <outputDirectory>./</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>setup.cfg</source>
+            <outputDirectory>./</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+        <file>
+            <source>requirements.txt</source>
+            <outputDirectory>./</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+        <file>
+            <source>MANIFEST.in</source>
+            <outputDirectory>./</outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+    </files>
+
+</assembly>
