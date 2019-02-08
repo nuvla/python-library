@@ -23,7 +23,7 @@ Python client for the SlipStream CIMI API.
   # Login with api-key & secret
   api.login_apikey('credential/uuid', 'secret')
 
-  api.cimi_search('users')
+  api.search('user')
 
   # Logout
   api.logout()
@@ -78,7 +78,7 @@ Or for a specific function:
 _Python shell/code_
 ```python
 from nuvla.api import Api
-help(Api.cimi_search)
+help(Api.search)
 ```
 _Shell_
 ```sh
@@ -90,7 +90,7 @@ Or to get only the docstring:
 _Python shell/code_
 ```python
 from nuvla.api import Api
-print Api.cimi_search.__doc__
+print Api.search.__doc__
 ```
 
 Currently there is no HTML version of the documentation, only
