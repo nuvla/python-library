@@ -133,7 +133,7 @@ class SessionStore(requests.Session):
             return self.request('POST', self.session_base_url,
                                 headers={'Content-Type': 'application/json',
                                          'Accept': 'application/json'},
-                                json={'session-template': login_params})
+                                json={'template': login_params})
         else:
             return None
 
