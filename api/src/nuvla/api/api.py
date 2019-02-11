@@ -1,22 +1,7 @@
 # -*- coding: utf-8 -*-
-#
-# (C) Copyright 2017 SixSq (http://sixsq.com/).
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 """
- Python wrapper of the SlipStream API (http://ssapi.sixsq.com).
+ Python wrapper of the Nuvla API.
 
 
  Install
@@ -86,7 +71,7 @@ from . import models
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ENDPOINT = 'https://nuv.la'
+DEFAULT_ENDPOINT = 'https://nuvla.io'
 DEFAULT_COOKIE_FILE = os.path.expanduser('~/.nuvla/cookies.txt')
 HREF_SESSION_TMPL_INTERNAL = 'session-template/internal'
 HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
@@ -148,7 +133,7 @@ class SessionStore(requests.Session):
             return self.request('POST', self.session_base_url,
                                 headers={'Content-Type': 'application/json',
                                          'Accept': 'application/json'},
-                                json={'sessionTemplate': login_params})
+                                json={'session-template': login_params})
         else:
             return None
 
@@ -185,14 +170,12 @@ def to_login_params(creds):
 
 
 class Api(object):
-    """ This class is a Python wrapper&helper of the native SlipStream REST API"""
-
-    CIMI_PARAMETERS_NAME = ['first', 'last', 'filter', 'select', 'expand', 'orderby', 'aggregation']
+    """ This class is a Python wrapper&helper of the native Nuvla REST API"""
 
     def __init__(self, endpoint=DEFAULT_ENDPOINT, cookie_file=None, insecure=False, reauthenticate=False,
                  login_creds=None):
         """
-        :param endpoint: SlipStream endpoint (https://nuv.la).
+        :param endpoint: Nuvla endpoint (https://nuvla.io).
         :param cookie_file: cookie jar file
         :param insecure: don't check server certificate.
         :param reauthenticate: reauthenticate in case of requets failures with status code 401 or 403.
@@ -215,9 +198,9 @@ class Api(object):
         self._cimi_cloud_entry_point = None
 
     def login(self, login_params):
-        """Uses given 'login_params' to log into the SlipStream server. The
+        """Uses given 'login_params' to log into the Nuvla server. The
         'login_params' must be a map containing an "href" element giving the id of
-        the sessionTemplate resource and any other attributes required for the
+        the session-template resource and any other attributes required for the
         login method. E.g.:
 
         {"href" : "session-template/internal",
@@ -262,7 +245,7 @@ class Api(object):
                                            'secret': secret}))
 
     def logout(self):
-        """Logs user out by deleting session.
+        """Logout user by deleting his session.
         """
         session_id = self.current_session()
         if session_id is not None:
@@ -276,10 +259,10 @@ class Api(object):
         :return: Current user session.
         :rtype: str
         """
-        resource_type = 'sessions'
-        session = self.cimi_search(resource_type)
+        resource_type = 'session'
+        session = self.search(resource_type)
         if session and session.count > 0:
-            return session.sessions[0].get('id')
+            return session.resources[0].id
         else:
             return None
 
@@ -291,25 +274,14 @@ class Api(object):
         return models.CloudEntryPoint(cep_json)
 
     @property
-    def cimi_cloud_entry_point(self):
+    def cloud_entry_point(self):
         if self._cimi_cloud_entry_point is None:
             self._cimi_cloud_entry_point = self._cimi_get_cloud_entry_point()
         return self._cimi_cloud_entry_point
 
-    @classmethod
-    def _split_cimi_params(cls, params):
-        cimi_params = {}
-        other_params = {}
-        for key, value in params.items():
-            if key in cls.CIMI_PARAMETERS_NAME:
-                cimi_params['$' + key] = value
-            else:
-                other_params[key] = value
-        return cimi_params, other_params
-
     @staticmethod
     def _cimi_find_operation_href(cimi_resource, operation):
-        operation_href = cimi_resource.operations_by_name.get(operation, {}).get('href')
+        operation_href = cimi_resource.operations.get(operation, {}).get('href')
 
         if not operation_href:
             raise KeyError("Operation '{0}' not found.".format(operation))
@@ -318,13 +290,13 @@ class Api(object):
 
     def _cimi_get_uri(self, resource_id=None, resource_type=None):
         if resource_id is None and resource_type is None:
-            raise TypeError("You have to specify 'resource_uri' or 'resource_type'.")
+            raise TypeError("You have to specify 'resource_id' or 'resource_type'.")
 
         if resource_id is not None and resource_type is not None:
-            raise TypeError("You can only specify 'resource_uri' or 'resource_type', not both.")
+            raise TypeError("You can only specify 'resource_id' or 'resource_type', not both.")
 
         if resource_type is not None:
-            resource_id = self.cimi_cloud_entry_point.entry_points.get(resource_type)
+            resource_id = self.cloud_entry_point.entry_points.get(resource_type)
             if resource_id is None:
                 raise KeyError("Resource type '{0}' not found.".format(resource_type))
 
@@ -350,7 +322,7 @@ class Api(object):
                     message = e.response.text
                 except:
                     message = str(e)
-            raise SlipStreamError(message, response)
+            raise NuvlaError(message, response)
 
         return response.json()
 
@@ -369,23 +341,22 @@ class Api(object):
     def _cimi_delete(self, resource_id=None):
         return self._cimi_request('DELETE', resource_id)
 
-    def cimi_get(self, resource_id, **kwargs):
+    def get(self, resource_id, **kwargs):
         """ Retreive a CIMI resource by it's resource id
 
         :param      resource_id: The id of the resource to retrieve
         :type       resource_id: str
 
-        :keyword    select: Select attributes to return. (resourceURI always returned)
+        :keyword    select: Select attributes to return. (resource-type always returned)
         :type       select: str or list of str
 
         :return:    A CimiResource object corresponding to the resource
         :rtype:     CimiResource
         """
-        cimi_params, query_params = self._split_cimi_params(kwargs)
-        resp_json = self._cimi_get(resource_id=resource_id, params=cimi_params)
+        resp_json = self._cimi_get(resource_id=resource_id, params=kwargs)
         return models.CimiResource(resp_json)
 
-    def cimi_edit(self, resource_id, data, **kwargs):
+    def edit(self, resource_id, data, **kwargs):
         """ Edit a CIMI resource by it's resource id
 
         :param      resource_id: The id of the resource to edit
@@ -401,12 +372,11 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
         :rtype:     CimiResponse
         """
-        resource = self.cimi_get(resource_id=resource_id)
+        resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'edit')
-        cimi_params, query_params = self._split_cimi_params(kwargs)
-        return models.CimiResponse(self._cimi_put(resource_id=operation_href, json=data, params=cimi_params))
+        return models.CimiResponse(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
 
-    def cimi_delete(self, resource_id):
+    def delete(self, resource_id):
         """ Delete a CIMI resource by it's resource id
 
         :param  resource_id: The id of the resource to delete
@@ -416,11 +386,11 @@ class Api(object):
         :rtype:     CimiResponse
 
         """
-        resource = self.cimi_get(resource_id=resource_id)
+        resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'delete')
         return models.CimiResponse(self._cimi_delete(resource_id=operation_href))
 
-    def cimi_add(self, resource_type, data):
+    def add(self, resource_type, data):
         """ Add a CIMI resource to the specified resource_type (Collection)
 
         :param      resource_type: Type of the resource (Collection name)
@@ -432,11 +402,11 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
         :rtype:     CimiResponse
         """
-        collection = self.cimi_search(resource_type=resource_type, last=0)
+        collection = self.search(resource_type=resource_type, last=0)
         operation_href = self._cimi_find_operation_href(collection, 'add')
         return models.CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
 
-    def cimi_search(self, resource_type, **kwargs):
+    def search(self, resource_type, **kwargs):
         """ Search for CIMI resources of the given type (Collection).
 
         :param      resource_type: Type of the resource (Collection name)
@@ -451,7 +421,7 @@ class Api(object):
         :keyword    filter: CIMI filter
         :type       filter: str
 
-        :keyword    select: Select attributes to return. (resourceURI always returned)
+        :keyword    select: Select attributes to return. (resource-type always returned)
         :type       select: str or list of str
 
         :keyword    expand: Expand linked resources (not implemented yet)
@@ -467,15 +437,14 @@ class Api(object):
                     as a generator with the method 'resources()' or with the attribute 'resources_list'
         :rtype:     CimiCollection
         """
-        cimi_params, query_params = self._split_cimi_params(kwargs)
-        resp_json = self._cimi_put(resource_type=resource_type, data=cimi_params, params=query_params)
-        return models.CimiCollection(resp_json, resource_type)
+        resp_json = self._cimi_put(resource_type=resource_type, data=kwargs)
+        return models.CimiCollection(resp_json)
 
-    def cimi_operation(self, resource_id, operation, data=None):
+    def operation(self, resource, operation, data=None):
         """ Execute an operation on a CIMI resource
 
-        :param      resource_id: The id of the resource to execute operation on
-        :type       resource_id: str
+        :param      resource: The resource to execute operation on.
+        :type       resource: CimiResource
 
         :param      operation: Operation name (e.g. describe)
         :type       operation: str
@@ -486,8 +455,6 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
         :rtype:     CimiResponse
         """
-        resource = self.cimi_get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, operation)
         resp_json = self._cimi_post(operation_href, json=data)
         return models.CimiResource(resp_json)
-
