@@ -3,18 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>sixsq.nuvla.python-api</groupId>
-  <artifactId>python-api</artifactId>
+  <groupId>sixsq.nuvla.python-library</groupId>
+  <artifactId>python-library</artifactId>
   <packaging>pom</packaging>
-  <version>3.69-SNAPSHOT</version>
-  <name>python-api</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>python-library</name>
   <url>http://sixsq.com</url>
 
   <parent>
-    <groupId>com.sixsq.slipstream</groupId>
-    <artifactId>SlipStreamCommunity</artifactId>
-    <version>3.69-SNAPSHOT</version>
-    <relativePath>../SlipStream/community</relativePath>
+    <groupId>sixsq.nuvla.parent</groupId>
+    <artifactId>pom</artifactId>
+    <version>1.0.0</version>
   </parent>
 
   <modules>
@@ -23,9 +22,9 @@
   </modules>
 
   <scm>
-    <connection>${scm.read}/python-api.git</connection>
-    <developerConnection>${scm.write}/python-api.git</developerConnection>
-    <url>${scm.public}/python-api.git</url>
+    <connection>${scm.read}/python-library.git</connection>
+    <developerConnection>${scm.write}/python-library.git</developerConnection>
+    <url>${scm.public}/python-library.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -38,9 +37,9 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-      <id>slipstream.releases</id>
-      <name>SlipStream Releases</name>
-      <url>https://nexus.sixsq.com/content/repositories/releases-community-rhel7</url>
+      <id>nuvla.releases</id>
+      <name>Nuvla Releases</name>
+      <url>https://nexus.sixsq.com/content/repositories/nuvla-releases</url>
     </repository>
 
     <repository>
@@ -50,9 +49,9 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-      <id>slipstream.snapshots</id>
-      <name>SlipStream Snapshots</name>
-      <url>https://nexus.sixsq.com/content/repositories/snapshots-community-rhel7</url>
+      <id>nuvla.snapshots</id>
+      <name>Nuvla Snapshots</name>
+      <url>https://nexus.sixsq.com/content/repositories/nuvla-snapshots</url>
     </repository>
 
   </repositories>
