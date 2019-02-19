@@ -1,5 +1,7 @@
 # SlipStreamPythonAPI
 
+[![Build Status](https://travis-ci.com/nuvla/python-library.svg?branch=master)](https://travis-ci.com/nuvla/python-library)
+
 Python client for the SlipStream CIMI API.
 
 ## Installation
