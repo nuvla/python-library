@@ -23,64 +23,69 @@
     </dependency>
   </dependencies>
 
-  <build>
-    
-    <plugins>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        
-        <executions>
-          <execution>
-            <id>unpack</id>
-            <phase>package</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+
+        <plugins>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+
+            <executions>
+              <execution>
+                <id>unpack</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/pypi-pkg/</outputDirectory>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>sixsq.nuvla.python-library</groupId>
+                      <artifactId>python-library-tarball</artifactId>
+                      <version>${project.version}</version>
+                      <type>tar.gz</type>
+                      <classifier>bundle</classifier>
+                      <overWrite>true</overWrite>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.6.0</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
             <configuration>
-              <outputDirectory>${project.build.directory}/pypi-pkg/</outputDirectory>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>sixsq.nuvla.python-library</groupId>
-                  <artifactId>python-library-tarball</artifactId>
-                  <version>${project.version}</version>
-                  <type>tar.gz</type>
-                  <classifier>bundle</classifier>
-                  <overWrite>true</overWrite>
-                </artifactItem>
-              </artifactItems>
+              <executable>python</executable>
+              <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
+              <arguments>
+                <argument>setup.py</argument>
+                <!-- For 'upload' PyPi credentials have to be in ~/.pypirc -->
+                <argument>sdist</argument>
+                <argument>upload</argument>
+              </arguments>
             </configuration>
-          </execution>
-        </executions>
-        
-      </plugin>
-      
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <executable>python</executable>
-          <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
-          <arguments>
-            <argument>setup.py</argument>
-            <!-- For 'upload' PyPi credentials have to be in ~/.pypirc -->
-            <argument>sdist</argument>
-            <!-- <argument>upload</argument> -->
-          </arguments>
-        </configuration>
-      </plugin>
-      
-    </plugins>
-  </build>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
