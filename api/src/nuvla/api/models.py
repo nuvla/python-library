@@ -70,7 +70,8 @@ class CloudEntryPoint(CimiResource):
 
     def __init__(self, data):
         super(CloudEntryPoint, self).__init__(data)
-        self.entry_points = self.extract_entry_points()
+        self.collections = self._extract_entry_points()
+        self.base_uri = self.data['base-uri']
 
-    def extract_entry_points(self):
+    def _extract_entry_points(self):
         return dict([(k, v['href']) for k, v in list(self.data.get('collections').items())])
