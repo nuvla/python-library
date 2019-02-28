@@ -300,7 +300,7 @@ class Api(object):
             raise TypeError("You can only specify 'resource_id' or 'resource_type', not both.")
 
         if resource_type is not None:
-            resource_id = self.cloud_entry_point.entry_points.get(resource_type)
+            resource_id = self.cloud_entry_point.collections.get(resource_type)
             if resource_id is None:
                 raise KeyError("Resource type '{0}' not found.".format(resource_type))
 
