@@ -87,22 +87,24 @@ class NuvlaError(Exception):
 class SessionStore(requests.Session):
     """A ``requests.Session`` subclass implementing a file-based session store."""
 
-    def __init__(self, endpoint, reauthenticate, cookie_file=None, login_params=None):
+    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate, login_params):
         super(SessionStore, self).__init__()
         self.session_base_url = '{0}/api/session'.format(endpoint)
         self.reauthenticate = reauthenticate
+        self.persist_cookie = persist_cookie
         self.login_params = login_params
-        if cookie_file is None:
-            cookie_file = DEFAULT_COOKIE_FILE
-        cookie_dir = os.path.dirname(cookie_file)
-        self.cookies = MozillaCookieJar(cookie_file)
-        # Create the $HOME/.nuvla dir if it doesn't exist
-        if not os.path.isdir(cookie_dir):
-            os.mkdir(cookie_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        # Load existing cookies if the cookies.txt exists
-        if os.path.isfile(cookie_file):
-            self.cookies.load(ignore_discard=True)
-            self.cookies.clear_expired_cookies()
+        if persist_cookie:
+            if cookie_file is None:
+                cookie_file = DEFAULT_COOKIE_FILE
+            cookie_dir = os.path.dirname(cookie_file)
+            self.cookies = MozillaCookieJar(cookie_file)
+            # Create the $HOME/.nuvla dir if it doesn't exist
+            if not os.path.isdir(cookie_dir):
+                os.mkdir(cookie_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            # Load existing cookies if the cookies.txt exists
+            if os.path.isfile(cookie_file):
+                self.cookies.load(ignore_discard=True)
+                self.cookies.clear_expired_cookies()
 
     def need_to_login(self, accessed_url, status_code):
         return self.reauthenticate and status_code in [401, 403] and accessed_url != self.session_base_url
@@ -115,7 +117,7 @@ class SessionStore(requests.Session):
 
         if not self.verify and response.cookies:
             self._unsecure_cookie(args[1], response)
-        if 'Set-Cookie' in response.headers:
+        if self.persist_cookie and 'Set-Cookie' in response.headers:
             self.cookies.save(ignore_discard=True)
 
         url = args[1]
@@ -148,7 +150,8 @@ class SessionStore(requests.Session):
         """Clear cookies for the specified domain."""
         try:
             self.cookies.clear(domain)
-            self.cookies.save()
+            if self.persist_cookie:
+                self.cookies.save()
         except KeyError:
             pass
 
@@ -172,17 +175,18 @@ def to_login_params(creds):
 class Api(object):
     """ This class is a Python wrapper&helper of the native Nuvla REST API"""
 
-    def __init__(self, endpoint=DEFAULT_ENDPOINT, cookie_file=None, insecure=False, reauthenticate=False,
-                 login_creds=None):
+    def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True, cookie_file=None,
+                 reauthenticate=False, login_creds=None):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
-        :param cookie_file: cookie jar file
-        :param insecure: don't check server certificate.
-        :param reauthenticate: reauthenticate in case of requets failures with status code 401 or 403.
+        :param insecure: Don't check server certificate.
+        :param persist_cookie: Use file to persist cookies.
+        :param cookie_file: Allow to specify cookie jar file path.
+        :param reauthenticate: Reauthenticate in case of requests failures with status code 401 or 403.
         :param login_creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
         """
         self.endpoint = endpoint
-        self.session = SessionStore(endpoint, reauthenticate, cookie_file=cookie_file,
+        self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds))
         self.session.verify = not insecure
         self.session.headers.update({'Accept': 'application/xml'})
