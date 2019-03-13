@@ -309,6 +309,7 @@ class Api(object):
     def _cimi_request(self, method, uri, params=None, json=None, data=None):
         response = self.session.request(method, '{0}/{1}/{2}'.format(self.endpoint, 'api', uri),
                                         headers={'Accept': 'application/json'},
+                                        allow_redirects=False,
                                         params=params,
                                         json=json,
                                         data=data)
