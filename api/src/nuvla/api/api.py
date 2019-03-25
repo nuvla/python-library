@@ -28,7 +28,7 @@
 
     api = Api()
 
-    api.login_internal('username', 'password')
+    api.login_password('username', 'password')
 
 
  Examples
@@ -38,7 +38,7 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  ::
 
-    api.login_internal('username', 'password')
+    api.login_password('username', 'password')
 
 
  Login on Nuvla with key and secret
@@ -61,7 +61,7 @@ import os
 import requests
 import stat
 from requests.cookies import MockRequest
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 from six.moves.http_cookiejar import MozillaCookieJar
 from six.moves.urllib.parse import urlparse
 
@@ -187,7 +187,6 @@ class Api(object):
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds))
         self.session.verify = not insecure
-        self.session.headers.update({'Accept': 'application/xml'})
         if insecure:
             try:
                 requests.packages.urllib3.disable_warnings(
@@ -225,6 +224,18 @@ class Api(object):
         return self.session.cimi_login(login_params)
 
     def login_internal(self, username, password):
+        """Deprecated! Use login_password instead. This will be removed in near future.
+        Login to the server using username and password.
+
+        :param username:
+        :param password:
+        :return: see login()
+        """
+        logging.warn('Deprecated! Use instead login_password')
+        return self.login(to_login_params({'username': username,
+                                           'password': password}))
+
+    def login_password(self, username, password):
         """Login to the server using username and password.
 
         :param username:
