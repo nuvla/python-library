@@ -28,7 +28,7 @@
 
     api = Api()
 
-    api.login_internal('username', 'password')
+    api.login_password('username', 'password')
 
 
  Examples
@@ -38,7 +38,7 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  ::
 
-    api.login_internal('username', 'password')
+    api.login_password('username', 'password')
 
 
  Login on Nuvla with key and secret
@@ -56,16 +56,14 @@
 
 from __future__ import absolute_import
 
-import os
-import stat
 import logging
-
+import os
 import requests
+import stat
 from requests.cookies import MockRequest
 from requests.exceptions import HTTPError, ConnectionError
-
-from six.moves.urllib.parse import urlparse
 from six.moves.http_cookiejar import MozillaCookieJar
+from six.moves.urllib.parse import urlparse
 
 from . import models
 
@@ -73,7 +71,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_ENDPOINT = 'https://nuvla.io'
 DEFAULT_COOKIE_FILE = os.path.expanduser('~/.nuvla/cookies.txt')
-HREF_SESSION_TMPL_INTERNAL = 'session-template/internal'
+HREF_SESSION_TMPL_PASSWORD = 'session-template/password'
 HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
 
 
@@ -164,7 +162,7 @@ def to_login_params(creds):
     if not creds:
         return {}
     if ('username' in creds) and ('password' in creds):
-        creds.update({'href': HREF_SESSION_TMPL_INTERNAL})
+        creds.update({'href': HREF_SESSION_TMPL_PASSWORD})
     elif ('key' in creds) and ('secret' in creds):
         creds.update({'href': HREF_SESSION_TMPL_APIKEY})
     else:
@@ -189,7 +187,6 @@ class Api(object):
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds))
         self.session.verify = not insecure
-        self.session.headers.update({'Accept': 'application/xml'})
         if insecure:
             try:
                 requests.packages.urllib3.disable_warnings(
@@ -207,7 +204,7 @@ class Api(object):
         the session-template resource and any other attributes required for the
         login method. E.g.:
 
-        {"href" : "session-template/internal",
+        {"href" : "session-template/password",
          "username" : "username",
          "password" : "password"}
          or
@@ -227,6 +224,18 @@ class Api(object):
         return self.session.cimi_login(login_params)
 
     def login_internal(self, username, password):
+        """Deprecated! Use login_password instead. This will be removed in near future.
+        Login to the server using username and password.
+
+        :param username:
+        :param password:
+        :return: see login()
+        """
+        logging.warn('Deprecated! Use instead login_password')
+        return self.login(to_login_params({'username': username,
+                                           'password': password}))
+
+    def login_password(self, username, password):
         """Login to the server using username and password.
 
         :param username:

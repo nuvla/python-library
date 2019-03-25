@@ -20,7 +20,7 @@ Python client for the Nuvla CIMI API.
   api = Api('https://nuvla.io')
   
   # Login with username & password
-  api.login_internal('username', 'password')
+  api.login_password('username', 'password')
   # or
   # Login with api-key & secret
   api.login_apikey('credential/uuid', 'secret')
