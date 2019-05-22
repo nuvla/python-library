@@ -23,12 +23,12 @@ do_push() {
     fi
 }
 
-do_push_tag() {
-    if [[ "${PUSH_CHANGES}" == "true" ]]; then
-        echo "INFO: PUSHING tag ${TAG_VERSION}."
-        git push origin ${TAG_VERSION}
+create_tag() {
+    if [ "${PUSH_CHANGES}" == "true" ]; then
+        echo "INFO: CREATING tag ${TAG_VERSION}."
+        git tag ${TAG_VERSION}
     else
-        echo "INFO: not pushing tag."
+        echo "INFO: not creating tag."
     fi
 }
 
@@ -36,7 +36,7 @@ do_push_tag() {
 tag_release() {
 
   # make the release tag
-  (git add . ; git commit -m "release ${TAG_VERSION}"; do_push; git tag ${TAG_VERSION}; do_push_tag)
+  (git add . ; git commit -m "release ${TAG_VERSION}"; do_push; create_tag; do_push_tag)
 
 }
 

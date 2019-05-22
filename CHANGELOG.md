@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+ 
+ - Release script fix
+
 ## [2.0.0] - 2019-04-29
 
-Initial, production release of nuvla-api.
+ - Initial, production release of nuvla-api.
 
 ### Changed 
 
