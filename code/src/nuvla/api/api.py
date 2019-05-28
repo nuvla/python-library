@@ -58,8 +58,9 @@ from __future__ import absolute_import
 
 import logging
 import os
-import requests
 import stat
+
+import requests
 from requests.cookies import MockRequest
 from requests.exceptions import HTTPError, ConnectionError
 from six.moves.http_cookiejar import MozillaCookieJar
@@ -179,7 +180,8 @@ class Api(object):
                  reauthenticate=False, login_creds=None):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
-        :param insecure: Don't check server certificate.
+        :param insecure: Don't check server certificate or you are using a http connection.
+        The http option is strongly unrecommanded.
         :param persist_cookie: Use file to persist cookies.
         :param cookie_file: Allow to specify cookie jar file path.
         :param reauthenticate: Reauthenticate in case of requests failures with status code 401 or 403.
