@@ -22,7 +22,7 @@
 
  Usage
  -----
- To use this library, import it and instanciate it.
+ To use this library, import it and instantiate it.
  Then use one of the method to login.::
     from nuvla.api import Api
 
@@ -87,12 +87,13 @@ class NuvlaError(Exception):
 class SessionStore(requests.Session):
     """A ``requests.Session`` subclass implementing a file-based session store."""
 
-    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate, login_params):
+    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate, login_params, authn_header=None):
         super(SessionStore, self).__init__()
         self.session_base_url = '{0}/api/session'.format(endpoint)
         self.reauthenticate = reauthenticate
         self.persist_cookie = persist_cookie
         self.login_params = login_params
+        self.authn_header = authn_header
         if persist_cookie:
             if cookie_file is None:
                 cookie_file = DEFAULT_COOKIE_FILE
@@ -111,6 +112,10 @@ class SessionStore(requests.Session):
 
     def _request(self, *args, **kwargs):
         kwargs.setdefault('timeout', DEFAULT_TIMEOUT)
+        if self.authn_header is not None:
+            headers = kwargs.get('headers', {})
+            headers['nuvla-authn-info'] = self.authn_header
+            kwargs['headers'] = headers
         return super(SessionStore, self).request(*args, **kwargs)
 
     def request(self, *args, **kwargs):
@@ -177,7 +182,7 @@ class Api(object):
     """ This class is a Python wrapper&helper of the native Nuvla REST API"""
 
     def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True, cookie_file=None,
-                 reauthenticate=False, login_creds=None):
+                 reauthenticate=False, login_creds=None, authn_header=None):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
         :param insecure: Don't check server certificate or you are using a http connection.
@@ -186,10 +191,12 @@ class Api(object):
         :param cookie_file: Allow to specify cookie jar file path.
         :param reauthenticate: Reauthenticate in case of requests failures with status code 401 or 403.
         :param login_creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
+        :param authn_header: String containing list of claims for authentication header
         """
         self.endpoint = endpoint
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
-                                    login_params=to_login_params(login_creds))
+                                    login_params=to_login_params(login_creds),
+                                    authn_header=authn_header)
         self.session.verify = not insecure
         if insecure:
             try:
