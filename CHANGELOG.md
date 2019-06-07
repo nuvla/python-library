@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+ - Allow nuvla-authn-info header to be set with
+   all requests. 
+
 ### Changed
  
  - Release script fix
