@@ -326,9 +326,14 @@ class Api(object):
 
         return resource_id
 
-    def _cimi_request(self, method, uri, params=None, json=None, data=None):
+    def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
+        json_header = {'Accept': 'application/json'}
+        if headers:
+            headers.update(json_header)
+        else:
+            headers = json_header
         response = self.session.request(method, '{0}/{1}/{2}'.format(self.endpoint, 'api', uri),
-                                        headers={'Accept': 'application/json'},
+                                        headers=headers,
                                         allow_redirects=False,
                                         params=params,
                                         json=json,
@@ -414,6 +419,25 @@ class Api(object):
         resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'delete')
         return models.CimiResponse(self._cimi_delete(resource_id=operation_href))
+
+    def delete_bulk(self, resource_type, filter, **kwargs):
+        """ Bulk delete CIMI resources of the given type (Collection).
+
+        :param      resource_type: Type of the resource (Collection name).
+        :type       resource_type: str
+
+        :param      Non-empty CIMI filter.
+        :type       filter: str
+
+        :return:    A CimiResponse object with the number of deleted records and other statistics.
+        :rtype:     CimiResponse
+        """
+        if not isinstance(filter, str) or len(filter) == 0:
+            raise NuvlaError("'filter' must be a non-empty string.")
+        else:
+            return models.CimiResponse(
+                self._cimi_request('DELETE', resource_type,
+                                   data={'filter': filter}, headers={'bulk': 'yes'}))
 
     def add(self, resource_type, data):
         """ Add a CIMI resource to the specified resource_type (Collection)
