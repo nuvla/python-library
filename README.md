@@ -7,7 +7,7 @@ via the Python language.
 
 ## Artifacts
 
-Package `nuvla-api` available from [![PyPi Project](https://img.shields.io/pypi/v/nuvla-api.svg)](https://pypi.org/project/nuvla-api)
+[![PyPi Project](https://img.shields.io/pypi/v/nuvla-api?label=nuvla-api)](https://pypi.org/project/nuvla-api)
 
 ## Documentation
 You can get the full documentation by typing:
