@@ -229,7 +229,7 @@ class Api(object):
         :param   login_params: {"href": "session-template/...", <creds>}
         :type    login_params: dict
         :return: Server response.
-        :rtype:  dict
+        :rtype:  requests.Response
 
         """
         return self.session.cimi_login(login_params)
