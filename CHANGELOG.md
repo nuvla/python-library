@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+ - Wrapper resources on top of CIMI for deployment, 
+   callback, credential, module, notification.
+
 ## [2.1.1] - 2019-10-10
 
 ### Changed
