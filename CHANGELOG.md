@@ -3,7 +3,12 @@
 ## Unreleased
 
  - Removed support of Python 2.
- - Wrapper resources on top of CIMI for deployment, 
+ 
+## [2.1.2] - 2020-03-25
+
+### Changed
+
+ - Added wrapper resources on top of CIMI for deployment, 
    callback, credential, module, notification.
 
 ## [2.1.1] - 2019-10-10
