@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+ - Removed support of Python 2.
  - Wrapper resources on top of CIMI for deployment, 
    callback, credential, module, notification.
 
