@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [3.0.0] - 2020-03-25
+
+### Changed
+
  - Removed support of Python 2.
  
 ## [2.1.2] - 2020-03-25
