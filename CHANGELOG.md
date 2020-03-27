@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+ - Add nuvla resources helper
+ - Remove support of Python 2
  - Wrapper resources on top of CIMI for deployment, 
    callback, credential, module, notification.
 
