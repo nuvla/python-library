@@ -153,7 +153,7 @@ class Deployment(object):
         :param infra_cred_id: str, resource URI
         :param data_sets: dict, {id: <resource URI>,
                                  filter: <CIMI filter>,
-                                 data-type: <record | object>,
+                                 data-type: data-<record | object>,
                                  time-start: <2020-02-24T13:10:30Z>,
                                  time-end: <2020-02-24T13:11:30Z>}
                         either `id` or `filter` and `data-type` are required.

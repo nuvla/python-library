@@ -455,7 +455,7 @@ class Api(object):
         operation_href = self._cimi_find_operation_href(collection, 'add')
         return models.CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
 
-    def search(self, resource_type, **kwargs):
+    def search(self, resource_type, **kwargs) -> models.CimiCollection:
         """ Search for CIMI resources of the given type (Collection).
 
         :param      resource_type: Type of the resource (Collection name)
