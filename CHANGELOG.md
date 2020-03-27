@@ -2,9 +2,23 @@
 
 ## Unreleased
 
- - Add nuvla resources helper
- - Remove support of Python 2
- - Wrapper resources on top of CIMI for deployment, 
+### Changed
+
+ - Add DeploymentParameter warapper resource,
+   fix Deployment credential_id method, and
+   Credential methods addition
+
+## [3.0.0] - 2020-03-25
+
+### Changed
+
+ - Removed support of Python 2.
+ 
+## [2.1.2] - 2020-03-25
+
+### Changed
+
+ - Added wrapper resources on top of CIMI for deployment, 
    callback, credential, module, notification.
 
 ## [2.1.1] - 2019-10-10

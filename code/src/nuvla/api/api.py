@@ -63,8 +63,8 @@ import stat
 import requests
 from requests.cookies import MockRequest
 from requests.exceptions import HTTPError, ConnectionError
-from six.moves.http_cookiejar import MozillaCookieJar
-from six.moves.urllib.parse import urlparse
+from http.cookiejar import MozillaCookieJar
+from urllib.parse import urlparse
 
 from . import models
 

@@ -9,6 +9,10 @@ via the Python language.
 
 [![PyPi Project](https://img.shields.io/pypi/v/nuvla-api?label=nuvla-api)](https://pypi.org/project/nuvla-api)
 
+Starting from **v3.0.0** this library is compatible only with Py3. If you are
+still using Py2 (which is not recommended), then install `nuvla-api==2.1.2`.
+v2.1.2 will not receive any updates.
+
 ## Documentation
 You can get the full documentation by typing:
 
