@@ -54,7 +54,15 @@ class Deployment(object):
 
     @staticmethod
     def credential_id(deployment):
-        return deployment['credential']
+        return deployment['parent']
+
+    @staticmethod
+    def compatibility(deployment):
+        return Deployment.module(deployment).get('compatibility', 'swarm')
+
+    @staticmethod
+    def is_compatibility_docker_compose(deployment):
+        return Deployment.compatibility(deployment) == 'docker-compose'
 
     @staticmethod
     def get_port_name_value(port_mapping):
@@ -283,4 +291,3 @@ class Deployment(object):
 
     def set_state_error(self, resource_id):
         self.set_state(resource_id, self.STATE_ERROR)
-

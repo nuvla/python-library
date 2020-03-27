@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+ - Add DeploymentParameter warapper resource,
+   fix Deployment credential_id method, and
+   Credential methods addition
+
 ## [3.0.0] - 2020-03-25
 
 ### Changed
