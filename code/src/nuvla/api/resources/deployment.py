@@ -1,6 +1,15 @@
 
+import time
+from typing import Union, Optional
+from datetime import datetime, timezone, timedelta
+
 from .utils import check_created, ResourceNotFound
-from ..api import Api as Nuvla
+from ..api import Api as Nuvla, NuvlaResourceOperationNotAvailable
+from ..models import CimiResource
+
+
+class DeploymentOperationNotAvailable(Exception):
+    pass
 
 
 class Deployment(object):
@@ -37,8 +46,12 @@ class Deployment(object):
         return Deployment.subtype(deployment) == 'application_kubernetes'
 
     @staticmethod
-    def module(deployment):
-        return deployment['module']
+    def module(deployment: Union[dict, CimiResource]):
+        key = 'module'
+        if isinstance(deployment, dict):
+            return deployment[key]
+        else:
+            return deployment.data[key]
 
     @staticmethod
     def module_content(deployment):
@@ -49,17 +62,29 @@ class Deployment(object):
         return deployment['acl']['owners'][0]
 
     @staticmethod
-    def state(deployment):
-        return deployment['state']
+    def state(deployment: Union[dict, CimiResource]):
+        key = 'state'
+        if isinstance(deployment, dict):
+            return deployment[key]
+        else:
+            return deployment.data[key]
 
     @staticmethod
     def credential_id(deployment):
-        return deployment['credential']
+        return deployment['parent']
 
     @staticmethod
     def get_port_name_value(port_mapping):
         port_details = port_mapping.split(':')
         return '.'.join([port_details[0], port_details[2]]), port_details[1]
+
+    @staticmethod
+    def logs(logs: Union[dict, CimiResource]):
+        key = 'log'
+        if isinstance(logs, dict):
+            return logs.get(key, [])
+        else:
+            return logs.data.get(key, [])
 
     def __init__(self, nuvla: Nuvla):
         self.nuvla = nuvla
@@ -144,7 +169,7 @@ class Deployment(object):
             deployment.update({'data': data})
 
     def create(self, module_id, infra_cred_id=None, data_sets=None,
-               data_records=None, data_objects=None):
+               data_records=None, data_objects=None) -> CimiResource:
         """
         Returns deployment as dictionary created from `module_id`.
         Sets `infra_cred_id` infrastructure credentials on the deployment, if given.
@@ -159,57 +184,123 @@ class Deployment(object):
                         either `id` or `filter` and `data-type` are required.
         :param data_records: list of data-record resource URIs
         :param data_objects: list of data-object resource URIs
-        :return: dict
+        :return: CimiResource
         """
         module = {"module": {"href": module_id}}
 
         res = self.nuvla.add(self.resource, module)
         deployment_id = check_created(res, 'Failed to create deployment.')
 
-        deployment = self.get(deployment_id)
+        # Get created deployment and update if needed.
+        dpl = self.get(deployment_id)
 
+        updated = False
         if infra_cred_id:
-            deployment.update({'parent': infra_cred_id})
-        self._set_data(deployment, data_sets, data_records, data_objects)
-        try:
-            return self.nuvla.edit(deployment_id, deployment).data
-        except Exception as ex:
-            raise Exception('ERROR: Failed to edit {0}: {1}'.format(deployment_id, ex))
+            dpl.data.update({'parent': infra_cred_id})
+            updated = True
+        if any([data_sets, data_records, data_objects]):
+            self._set_data(dpl.data, data_sets, data_records, data_objects)
+            updated = True
+        if updated:
+            try:
+                dpl = self.nuvla.edit(deployment_id, dpl.data)
+            except Exception as ex:
+                raise Exception('Failed editing {0}: {1}'.format(deployment_id, ex))
 
-    def get(self, resource_id):
+        return dpl
+
+    def get(self, resource_id) -> CimiResource:
         """
         Returns deployment identified by `resource_id` as dictionary.
         :param resource_id: str
-        :return: dict
+        :return: CimiResource
         """
-        return self.nuvla.get(resource_id).data
+        return self.nuvla.get(resource_id)
 
-    def start(self, resource_id):
-        return self.nuvla.operation(resource_id, 'start')
+    def get_state(self, resource_id):
+        return self.state(self.get(resource_id))
 
-    def stop(self, resource_id):
-        return self.nuvla.operation(resource_id, 'stop')
+    def _operation(self, resource_id: str, operation, timeout=0, data: Optional[dict]=None):
+        time_max = time.time() + timeout
+        while True:
+            resource = self.get(resource_id)
+            try:
+                if operation == 'delete':
+                    return self.nuvla.delete(resource_id)
+                else:
+                    return self.nuvla.operation(resource, operation, data)
+            except NuvlaResourceOperationNotAvailable:
+                msg = "Operation '{0}' is not available on deployment in state {1}." \
+                    .format(operation, Deployment.state(resource))
+                print(msg)
+                if time.time() >= time_max:
+                    raise DeploymentOperationNotAvailable(msg)
+                else:
+                    time.sleep(3)
 
-    def delete(self, resource_id):
-        return self.nuvla.delete(resource_id)
+    def start(self, resource_id, timeout=0):
+        return self._operation(resource_id, 'start', timeout)
+
+    def stop(self, resource_id, timeout=0):
+        return self._operation(resource_id, 'stop', timeout)
+
+    def delete(self, resource_id, timeout=0):
+        return self._operation(resource_id, 'delete', timeout)
 
     def launch(self, module_id, infra_cred_id=None, data_sets=None,
-               data_records=None, data_objects=None):
+               data_records=None, data_objects=None) -> CimiResource:
         dpl = self.create(module_id, infra_cred_id=infra_cred_id, data_sets=data_sets,
                           data_records=data_records, data_objects=data_objects)
-        rid = self.id(dpl)
-        self.start(rid)
-        return rid
+        self.start(dpl.id)
+        return self.get(dpl.id)
 
-    def terminate(self, resource_id):
+    def terminate(self, resource_id: str, timeout=30):
+        """
+        Stops and deletes the deployment. Waits at max `timeout` seconds for the
+        deployment to be fully stoped before attemting deletion.
+        :param resource_id:
+        :param timeout:
+        :return:
+        """
         self.stop(resource_id)
-        self.delete(resource_id)
+        return self.delete(resource_id, timeout=timeout)
 
-    def _create_log(self, resource_id):
-        pass
+    def init_logs(self, deployment: CimiResource, service: str,
+                  since: Optional[datetime] = None) -> CimiResource:
+        """
+        Creates and returns `deployment-log` resource that corresponds to the
+        logs of `service` from `deployment` and starting from `since`.
+        :param deployment: CimiResource
+        :param service: str
+        :param since: datetime
+        :return: CimiResource
+        """
+        if not since:
+            fmt = '%Y-%m-%dT%H:%M:%S.%fZ'
+            t = datetime.strptime(deployment.data['created'], fmt)
+            # Give a bit of slack.
+            td = timedelta(minutes=5)
+            since = t - td
+        since_str = since.replace(tzinfo=timezone.utc) \
+            .replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%SZ')
+        request = {'service': 'Service/{}'.format(service),
+                   'since': since_str}
+        resp = self._operation(deployment.id, 'create-log', data=request)
+        logs_id = resp.data['resource-id']
+        return self.nuvla.get(logs_id)
 
-    def get_logs(self, resource_id):
-        pass
+    def get_logs(self, logs: CimiResource) -> list:
+        """
+        Get `service` logs from `since` till now.
+        :param logs: CimiResource
+        :return: list: list of lines of the log
+        """
+        # Request fetching of logs from container.
+        self.nuvla.operation(logs, 'fetch')
+        # Wait for logs to be produced.
+        time.sleep(5)
+        # Get the resource. It may contain the logs.
+        return self.nuvla.get(logs.id)
 
     def create_parameter(self, resource_id, user_id, param_name, param_value=None,
                          node_id=None, param_description=None):

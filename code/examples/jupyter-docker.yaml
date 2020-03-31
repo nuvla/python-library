@@ -1,0 +1,26 @@
+version: "3.7"
+
+# Environment vars provided by Nuvla.
+x-nuvla_env: &nuvla_env
+  NUVLA_DEPLOYMENT_ID: $NUVLA_DEPLOYMENT_ID
+  NUVLA_ENDPOINT: $NUVLA_ENDPOINT
+  NUVLA_API_KEY: $NUVLA_API_KEY
+  NUVLA_API_SECRET: $NUVLA_API_SECRET
+
+services:
+  jupyter:
+    image: docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      <<: *nuvla_env
+    command: >
+      sh -c 'set -x;
+      export PARENT=$$(basename "$$(head /proc/1/cgroup)");
+      export CONT_NAME=jupyter_$$(date +%s);
+      docker run -d -v /var/run/docker.sock:/var/run/docker.sock -e PARENT -e CHILD=$${CONT_NAME} registry-gnss.nuv.la/docker-cleaner:linux
+      && docker run -v /var/run/docker.sock:/var/run/docker.sock --privileged --cap-add=SYS_ADMIN --device /dev/fuse --rm -P --name $${CONT_NAME} --user root -e GRANT_SUDO=yes -e CONT_NAME -e NUVLA_DEPLOYMENT_ID -e NUVLA_ENDPOINT -e NUVLA_API_KEY -e NUVLA_API_SECRET registry-gnss.nuv.la/example-jupyter:0.2.3'
+    deploy:
+      placement:
+        constraints:
+          - node.labels.type == gifres.user

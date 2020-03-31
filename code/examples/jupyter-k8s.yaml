@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: jupyter
+  template:
+    metadata:
+      labels:
+        k8s-app: jupyter
+        name: jupyter
+    spec:
+      containers:
+        - image: registry-gnss.nuv.la/example-jupyter:0.2.3
+          name: jupyter
+          env:
+            - name: NUVLA_DEPLOYMENT_ID
+              value: $NUVLA_DEPLOYMENT_ID
+            - name: NUVLA_ENDPOINT
+              value: $NUVLA_ENDPOINT
+            - name: NUVLA_API_KEY
+              value: $NUVLA_API_KEY
+            - name: NUVLA_API_SECRET
+              value: $NUVLA_API_SECRET
+          ports:
+            - name: https
+              containerPort: 8888
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jupyter
+spec:
+  selector:
+    k8s-app: jupyter
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8888
+      name: https

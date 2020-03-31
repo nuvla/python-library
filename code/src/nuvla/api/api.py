@@ -66,7 +66,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from http.cookiejar import MozillaCookieJar
 from urllib.parse import urlparse
 
-from . import models
+from .models import CimiResource, CimiCollection, CimiResponse, CloudEntryPoint
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,12 @@ class NuvlaError(Exception):
         super(NuvlaError, self).__init__(reason)
         self.reason = reason
         self.response = response
+
+
+class NuvlaResourceOperationNotAvailable(KeyError):
+    def __init__(self, reason, operation):
+        super().__init__(reason)
+        self.operation = operation
 
 
 class SessionStore(requests.Session):
@@ -295,7 +301,7 @@ class Api(object):
 
     def _cimi_get_cloud_entry_point(self):
         cep_json = self._cimi_get('cloud-entry-point')
-        return models.CloudEntryPoint(cep_json)
+        return CloudEntryPoint(cep_json)
 
     @property
     def cloud_entry_point(self):
@@ -304,11 +310,12 @@ class Api(object):
         return self._cimi_cloud_entry_point
 
     @staticmethod
-    def _cimi_find_operation_href(cimi_resource, operation):
+    def _cimi_find_operation_href(cimi_resource: CimiResource, operation: str):
         operation_href = cimi_resource.operations.get(operation, {}).get('href')
 
         if not operation_href:
-            raise KeyError("Operation '{0}' not found.".format(operation))
+            raise NuvlaResourceOperationNotAvailable(
+                "Operation '{0}' not found.".format(operation), operation)
 
         return operation_href
 
@@ -371,7 +378,7 @@ class Api(object):
     def _cimi_delete(self, resource_id=None):
         return self._cimi_request('DELETE', resource_id)
 
-    def get(self, resource_id, **kwargs):
+    def get(self, resource_id, **kwargs) -> CimiResource:
         """ Retreive a CIMI resource by it's resource id
 
         :param      resource_id: The id of the resource to retrieve
@@ -384,7 +391,7 @@ class Api(object):
         :rtype:     CimiResource
         """
         resp_json = self._cimi_get(resource_id=resource_id, params=kwargs)
-        return models.CimiResource(resp_json)
+        return CimiResource(resp_json)
 
     def edit(self, resource_id, data, **kwargs):
         """ Edit a CIMI resource by it's resource id
@@ -400,11 +407,11 @@ class Api(object):
         :type       select: str or list of str
 
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
-        :rtype:     CimiResponse
+        :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'edit')
-        return models.CimiResponse(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
+        return CimiResource(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
 
     def delete(self, resource_id):
         """ Delete a CIMI resource by it's resource id
@@ -418,7 +425,7 @@ class Api(object):
         """
         resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'delete')
-        return models.CimiResponse(self._cimi_delete(resource_id=operation_href))
+        return CimiResponse(self._cimi_delete(resource_id=operation_href))
 
     def delete_bulk(self, resource_type, filter, **kwargs):
         """ Bulk delete CIMI resources of the given type (Collection).
@@ -435,7 +442,7 @@ class Api(object):
         if not isinstance(filter, str) or len(filter) == 0:
             raise NuvlaError("'filter' must be a non-empty string.")
         else:
-            return models.CimiResponse(
+            return CimiResponse(
                 self._cimi_request('DELETE', resource_type,
                                    data={'filter': filter}, headers={'bulk': 'yes'}))
 
@@ -453,9 +460,9 @@ class Api(object):
         """
         collection = self.search(resource_type=resource_type, last=0)
         operation_href = self._cimi_find_operation_href(collection, 'add')
-        return models.CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
+        return CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
 
-    def search(self, resource_type, **kwargs) -> models.CimiCollection:
+    def search(self, resource_type, **kwargs) -> CimiCollection:
         """ Search for CIMI resources of the given type (Collection).
 
         :param      resource_type: Type of the resource (Collection name)
@@ -487,9 +494,9 @@ class Api(object):
         :rtype:     CimiCollection
         """
         resp_json = self._cimi_put(resource_type=resource_type, data=kwargs)
-        return models.CimiCollection(resp_json)
+        return CimiCollection(resp_json)
 
-    def operation(self, resource, operation, data=None):
+    def operation(self, resource: CimiResource, operation, data=None) -> CimiResponse:
         """ Execute an operation on a CIMI resource
 
         :param      resource: The resource to execute operation on.
@@ -506,4 +513,4 @@ class Api(object):
         """
         operation_href = self._cimi_find_operation_href(resource, operation)
         resp_json = self._cimi_post(operation_href, json=data)
-        return models.CimiResource(resp_json)
+        return CimiResponse(resp_json)
