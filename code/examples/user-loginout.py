@@ -3,8 +3,10 @@
 from nuvla.api import Api as Nuvla, NuvlaError
 from nuvla.api.resources.user import User
 
-email = "konstan+gssc2@sixsq.com"
-passwd = "Saf8pass%"
+# Must be valid email address.
+username = "<email@example.com>"
+# Must contain uppercase letter, number and special character.
+password = ""
 
 # Create Nuvla client. No authentication required.
 nuvla = Nuvla()
@@ -16,7 +18,7 @@ user_api = User(nuvla)
 # Login using username (which is user's email) and password.
 try:
     # User session resource ID as string is returned.
-    session = user_api.login_password(email, passwd)
+    session = user_api.login_password(username, password)
     print('user session:', session)
 except NuvlaError as ex:
     print("Failed authenticating with Nuvla: {}".format(ex.reason))
