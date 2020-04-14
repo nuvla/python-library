@@ -2,7 +2,6 @@
 import os
 import re
 from ..api import Api as Nuvla, NuvlaError
-from ..models import CimiResource
 
 
 APP_TYPE_K8S = 'application_kubernetes'
@@ -61,7 +60,7 @@ class Module:
         """
         return self.nuvla.get(resource_id).data
 
-    def update(self, module: dict):
+    def update(self, module: dict) -> dict:
         res = self.nuvla.edit(module['id'], module)
         return res.data
 

@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 
-from pprint import pp
 import time
 import os
 import re
 
+
 from nuvla.api import Api as Nuvla
 from nuvla.api.resources.module import Module, AppBuilderK8s, ProjectBuilder
 from nuvla.api.resources.deployment import Deployment
+from nuvla.api.resources.infra_service import InfraServiceGroup
+from utils import nuvla_conf_user_pass
 
-email = "konstan+gssc2@sixsq.com"
-passwd = "Saf8pass%"
+
+username, password = nuvla_conf_user_pass()
 
 # Create Nuvla client. No authentication required.
-nuvla = Nuvla()
+nuvla = Nuvla(debug=True)
 # nuvla = Nuvla(endpoint='https://nuvla.io', insecure=True)
 
 #
 # Login to Nuvla.
 #
-nuvla.login_password(email, passwd)
+nuvla.login_password(username, password)
+
+#
+# Create infrastructure service group.
+#
+isgroup_id = InfraServiceGroup(nuvla).add('Test Group')
 
 #
 # Add data.

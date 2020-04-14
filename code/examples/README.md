@@ -65,37 +65,47 @@ Before starting provisioning containers using Nuvla, endpoints and credentials
 of Container Orchestration Engines (Docker Swarm and Kubernetes) must be added
 to Nuvla as infrastructure services (IS). To facilitate the management of the
 infrastructure services they can be grouped into infrastructure service groups.
-In the case of the grouping, the group becomes parent of ISes.
+In the case of the grouping, the group becomes parent of infrastructure
+services.
+
+Nuvla allows defining private Docker Registries with their corresponding
+credentials to facilitate deployment of containers from the images coming from 
+private registries. It's a good practice to define infrastructure service group
+for the registry as well.
 
 [create-infra-service-group.py](create-infra-service-group.py) shows how to
 create infrastructure service group.
 
 ```
 $ ./create-infra-service-group.py
-infrastructure-service-group/0053c6e2-fbaa-439d-96af-02403c7504e8
+infra service group: infrastructure-service-group/19ce4191-da42-4831-9903-ef056b7d4d4f
+infra service registry group: infrastructure-service-group/3a88ced8-0ab2-46d4-bfe1-95c235e77af6
 $
 ```
 
 # Create Infrastructure Service
 
-Different types of infrastructure services can be added to Nuvla, e.g. Docker
-Swarm, Kubernetes, S3.
+Different types of infrastructure services can be added to Nuvla: Docker
+Swarm, Kubernetes, S3, Docker Registry.
 
 Infrastructure services set infrastructure service group ID as their parent to
-indicate they are part of the same group. Knowing IS group ID one can discover
-services that belong to the same "site" and hence are logically grouped. This
-promotes discovery. For example, if one knows infrastructure service ID of data
-endpoint - S3, it's possible to discover the corresponding Kubernetes or Docker
-swarm ones, and visa versa. This mechanism for example can be used in scheduling
-of data processing related tasks.
+indicate they are part of the same group. Knowing infrastructure service group
+ID one can discover services that belong to the same "site" and hence, are
+logically grouped. This promotes discovery. For example, if one knows
+infrastructure service ID of data endpoint - S3, it's possible to discover the
+corresponding Kubernetes or Docker swarm ones, and visa versa. This mechanism
+for example can be used in scheduling of data processing related tasks.
 
 [create-infra-service.py](create-infra-service.py) shows how infrastructure
 services can be created and added to a group (only one group is possible).
+Please take the IDs of the groups created in the previous step and change group
+IDs defined in the script.
 
 ```
 $ ./create-infra-service.py
-Kubernetes: infrastructure-service/09614bdc-4afa-49e1-891f-0eb3a4db0628
-S3: infrastructure-service/ba6530a7-4f7f-4501-b483-f137e560e48b
+Kubernetes: infrastructure-service/13b419c0-c50a-4f97-826f-8eae16f68f64
+S3: infrastructure-service/6d0b48c4-2608-46f4-9734-6a7e5a2135d8
+Docker registry: infrastructure-service/19e1c37b-8bdc-43b8-8dab-eb378ac61e1f
 $
 ```
 
