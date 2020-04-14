@@ -23,7 +23,7 @@ class CimiResponse(object):
 class CimiResource(CimiResponse):
 
     def __init__(self, data):
-        super(CimiResource, self).__init__(data)
+        super().__init__(data)
         self.id = data.get('id')
         self.resource_type = data.get('resource-type')
         self.__operations = None
@@ -38,7 +38,7 @@ class CimiResource(CimiResponse):
 class CimiCollection(CimiResource):
 
     def __init__(self, data):
-        super(CimiCollection, self).__init__(data)
+        super().__init__(data)
         self.count = self.data.get('count')
         self.__lock_iter = Lock()
         self.__lock_list = Lock()
@@ -69,7 +69,7 @@ class CimiCollection(CimiResource):
 class CloudEntryPoint(CimiResource):
 
     def __init__(self, data):
-        super(CloudEntryPoint, self).__init__(data)
+        super().__init__(data)
         self.collections = self._extract_entry_points()
         self.base_uri = self.data['base-uri']
 
