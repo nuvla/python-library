@@ -64,6 +64,9 @@ class Module:
         res = self.nuvla.edit(module['id'], module)
         return res.data
 
+    def get_urls(self, module_id) -> dict:
+        res = self.nuvla.get(module_id)
+        return dict(res.data.get('content', {}).get('urls'))
 
 class ModuleBuilder:
 
