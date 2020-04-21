@@ -61,12 +61,26 @@ class InfraServiceRegistry(InfraService):
     subtype = 'registry'
 
 
-class InfraServiceCred:
-    def __init__(self, nuvla):
-        self.nuvla = nuvla
+class InfraServiceCred(ResourceBase):
+    resource = 'credential'
+    subtype = None
+
+    def __init__(self, nuvla: Nuvla, subtype=None):
+        super().__init__(nuvla)
+        if not self.subtype and not subtype:
+            raise Exception('subtype must be defined.')
+        if subtype:
+            self.subtype = subtype
 
     def create(self, ):
         pass
 
     def create_from_config(self, filename, context):
         pass
+
+    def id_by_name(self, name, filter=None) -> list:
+        return super().id_by_name(name, filter=f"subtype='{self.subtype}'")
+
+
+class InfraServiceCredK8s(InfraServiceCred):
+    subtype = 'infrastructure-service-swarm'

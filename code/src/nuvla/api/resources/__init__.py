@@ -28,3 +28,13 @@ class ResourceBase:
         response = self.nuvla.delete(resource_id)
         return response.data['resource-id']
 
+    def id_by_name(self, name, filter=None) -> list:
+        """Returns list of resource IDs with name equals to `name`. In most
+        cases the length of the list will be 0 or 1.
+        """
+        fltr = f"name='{name}'"
+        if filter:
+           fltr += f' and {filter}'
+        res = self.nuvla.search(self.resource, filter=fltr)
+        return [r.data['id'] for r in res.resources]
+
