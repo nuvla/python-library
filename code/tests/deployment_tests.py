@@ -105,3 +105,29 @@ class DeploymentTest(TestCase):
         data_sets = [data_set_recs_objs]
         dpl_api._set_data(dpl, data_sets)
         data_filters_in(dpl, ['records', 'objects'])
+
+    def test_template_interpolation(self):
+        dpl_api = Deployment(Mock())
+
+        # Empty inputs.
+        assert '' == dpl_api._template_interpolation('', {})
+        assert '' == dpl_api._template_interpolation('', {'foo': 'bar'})
+
+        string = 'http://${foo}:${bar.baz}/?${baz-foo}'
+
+        # No substitution keys.
+        self.assertRaises(ValueError, dpl_api._template_interpolation,
+                          *(string, {}))
+
+        # Missing substitution key in params.
+        self.assertRaises(ValueError, dpl_api._template_interpolation,
+                          *(string, {'foo': 'FOO', 'bar.baz': 'BAR.BAZ'}))
+
+        # All required keys, but one empty substitution key in params.
+        params = {'foo': '', 'bar.baz': 'BAR.BAZ', 'baz-foo': 'BAZ-FOO'}
+        assert '' == dpl_api._template_interpolation(string, params)
+
+        # Success.
+        params = {'foo': 'FOO', 'bar.baz': 'BAR.BAZ', 'baz-foo': 'BAZ-FOO'}
+        assert 'http://FOO:BAR.BAZ/?BAZ-FOO' == \
+               dpl_api._template_interpolation(string, params)

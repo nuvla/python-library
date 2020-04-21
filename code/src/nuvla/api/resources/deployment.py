@@ -1,11 +1,13 @@
 
+import re
 import time
-from typing import Union, Optional
+from typing import Union, Optional, List, Dict
 from datetime import datetime, timezone, timedelta
 
+from . import ResourceBase
 from .utils import check_created, ResourceNotFound
 from ..api import Api as Nuvla, NuvlaResourceOperationNotAvailable
-from ..models import CimiResource
+from ..models import CimiResource, CimiResponse
 
 
 class DeploymentOperationNotAvailable(Exception):
@@ -22,8 +24,12 @@ class Deployment(object):
     resource = 'deployment'
 
     @staticmethod
-    def id(deployment):
-        return deployment['id']
+    def id(deployment: Union[dict, CimiResource]):
+        key = 'id'
+        if isinstance(deployment, dict):
+            return deployment[key]
+        else:
+            return deployment.data[key]
 
     @staticmethod
     def uuid(deployment):
@@ -86,10 +92,19 @@ class Deployment(object):
         else:
             return logs.data.get(key, [])
 
+    @staticmethod
+    def urls(deployment: Union[dict, CimiResource]) -> dict:
+        if isinstance(deployment, dict):
+            d = deployment
+        else:
+            d = deployment.data
+        return dict(d.get('module', {}).get('content', {}).get('urls', []))
+
     def __init__(self, nuvla: Nuvla):
         self.nuvla = nuvla
 
-    def _set_data(self, deployment, sets=None, records=None, objects=None):
+    def _set_data(self, deployment: dict, sets=None, records=None,
+                  objects=None):
         """
         :param deployment:
         :param sets: [{id: <resource URI>,
@@ -220,7 +235,8 @@ class Deployment(object):
     def get_state(self, resource_id):
         return self.state(self.get(resource_id))
 
-    def _operation(self, resource_id: str, operation, timeout=0, data: Optional[dict]=None):
+    def _operation(self, resource_id, operation, timeout=0,
+                   data: Optional[dict]=None) -> CimiResponse:
         time_max = time.time() + timeout
         while True:
             resource = self.get(resource_id)
@@ -254,16 +270,19 @@ class Deployment(object):
         self.start(dpl.id)
         return self.get(dpl.id)
 
-    def terminate(self, resource_id: str, timeout=30):
-        """
-        Stops and deletes the deployment. Waits at max `timeout` seconds for the
-        deployment to be fully stoped before attemting deletion.
-        :param resource_id:
-        :param timeout:
-        :return:
+    def terminate(self, resource_id: str, timeout=30) -> CimiResponse:
+        """Stops and deletes the deployment. Waits at max `timeout` seconds for
+        the deployment to be fully stoped before attemting deletion.
         """
         self.stop(resource_id)
         return self.delete(resource_id, timeout=timeout)
+
+    def list(self) -> List[Dict]:
+        res = self.nuvla.search(self.resource)
+        if res.count < 1:
+            return []
+        return res.data['resources']
+
 
     def init_logs(self, deployment: CimiResource, service: str,
                   since: Optional[datetime] = None) -> CimiResource:
@@ -289,7 +308,7 @@ class Deployment(object):
         logs_id = resp.data['resource-id']
         return self.nuvla.get(logs_id)
 
-    def get_logs(self, logs: CimiResource) -> list:
+    def get_logs(self, logs: CimiResource) -> CimiResource:
         """
         Get `service` logs from `since` till now.
         :param logs: CimiResource
@@ -301,6 +320,52 @@ class Deployment(object):
         time.sleep(5)
         # Get the resource. It may contain the logs.
         return self.nuvla.get(logs.id)
+
+    def _template_interpolation(self, string: str, params: dict) -> str:
+        """Returns `string` interpolated by the values from `params`.
+        Returns an empty string, if either of those is emtpy: `string`, `params`
+        or the value of the required interpolation key.
+        Throws ValueError if `params` is missing substitution keys defined in
+        `string`.
+        """
+        if not string:
+            return ''
+        groups = re.findall(r'(\${.*?})', string)
+        if len(groups) > 0 and not params:
+            raise ValueError('no substitutions provided.')
+        groups_keys = list(map(lambda x: x.replace('${','').replace('}',''),
+                            groups))
+        for k in groups_keys:
+            # If the interpolant from the string (key in groups_keys) is not in
+            # the list of parameters (params.keys()), interpolation is not possible.
+            if k not in params:
+                raise ValueError(f'{k} is missing in params')
+            if not params[k]:
+                return ''
+            string = re.compile('\${' + k + '}').sub(params[k], string)
+        return string
+
+    def get_url(self, deployment: CimiResource, name) -> Union[str, None]:
+        """Returns interpolated URL defined by `name` in deployment.
+        Returns an empty string if not all deployment parameters required
+        for interpolation are filled with values.
+        Returns None if either URL `name` is not present on the deployment or
+        interpolation is not possible due to missing deployment parameters. This
+        means obtaining URL will not be possible.
+        """
+        url = self.urls(deployment).get(name)
+        if not url:
+            return None
+        params = self.get_parameters(self.id(deployment.data))
+        # Flatten parameters map.
+        flat_params = {}
+        for v in params.values():
+            flat_params.update(v)
+        try:
+            return self._template_interpolation(url, flat_params)
+        except ValueError as ex:
+            print(ex)
+            return None
 
     def create_parameter(self, resource_id, user_id, param_name, param_value=None,
                          node_id=None, param_description=None):
@@ -316,21 +381,56 @@ class Deployment(object):
             parameter['value'] = param_value
         return self.nuvla.add('deployment-parameter', parameter)
 
-    def _get_parameter(self, resource_id, node_id, name, select=None):
-        filters = "parent='{0}' and node-id='{1}' and name='{2}'".format(resource_id, node_id, name)
+    def _get_parameter(self, resource_id, name, node_id=None, select=None):
+        filters = f"parent='{resource_id}' and name='{name}'"
+        if node_id:
+            filters += " and node-id='{}'".format(node_id)
         res = self.nuvla.search("deployment-parameter", filter=filters, select=select)
         if res.count < 1:
-            raise ResourceNotFound('Deployment parameter "{0}" not found.'.format(filters))
+            raise ResourceNotFound(f'Deployment parameter "{filters}" not found.')
         return res.resources[0]
 
     def get_parameter(self, resource_id, node_id, name):
+        """Returns value of deployment `resource_id` parameter `name`. To get
+        global level parameters (not belonging to a node), provide '' or None
+        as `node_id`.
+        Returns None if parameter is not found.
+        """
         try:
-            param = self._get_parameter(resource_id, node_id, name)
+            param = self._get_parameter(resource_id, name, node_id)
         except ResourceNotFound:
             return None
         return param.data.get('value')
 
-    def update_port_parameters(self, deployment, ports_mapping):
+    def get_parameters(self, resource_id, node_id='') -> Union[list, dict]:
+        """When `node_id` is not provided, returns dictionary with all
+        parameters
+        {'global': {'<param name>': '<param value>', },
+         '<node_id>': {'<param name>': '<param value>', },
+         ...}
+        'global' key corresponds to node_id == None or ''.
+        Returns list with parameters for the provided `node_id`.
+        Returns empty list or dict if parameters were not found.
+        """
+        fltr = f"parent='{resource_id}'"
+        if node_id:
+            fltr += f" and node-id='{node_id}'"
+            params = []
+        else:
+            params = {}
+        res = self.nuvla.search('deployment-parameter', filter=fltr)
+        for p in res.resources:
+            d = {p.data['name']: p.data.get('value')}
+            if node_id:
+                params.append(d)
+            else:
+                if 'node-id' in p.data:
+                    params.setdefault(p.data['node-id'], {}).update(d)
+                else:
+                    params.setdefault('global', {}).update(d)
+        return params
+
+    def update_port_parameters(self, deployment: dict, ports_mapping):
         if ports_mapping:
             for port_mapping in ports_mapping.split():
                 port_param_name, port_param_value = self.get_port_name_value(port_mapping)
