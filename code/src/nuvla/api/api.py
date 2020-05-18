@@ -91,16 +91,54 @@ class NuvlaResourceOperationNotAvailable(KeyError):
         self.operation = operation
 
 
+def _request_debug(method, endpoint, params=None, json=None,
+                   data=None, headers: Optional[dict]=None):
+    print('::: HTTP Request -> Response :::')
+    print('>>> Request')
+    url_res = urlparse(endpoint)
+    print('{0} {1}'.format(method, url_res.path))
+    print('Host: {}'.format(url_res.netloc))
+    for k, v in headers.items():
+        print('{0}: {1}'.format(k, v))
+    if any([params, json, data]):
+        print()
+    if params:
+        print('params:', params)
+    if json:
+        pp(json)
+    if data:
+        dlen = len(data)
+        for k, v in data.items():
+            print('{0}={1}'.format(k, v))
+            dlen -= 1
+            if dlen > 0:
+                print('&')
+    print('<<< Request')
+
+
+def _response_debug(response: requests.Response):
+    print('>>> Response')
+    print(response.status_code, response.reason)
+    for k, v in response.headers.items():
+        print('{0}: {1}'.format(k, v))
+    print()
+    print(response.text)
+    # pp(response.json())
+    print('<<< Response')
+
+
 class SessionStore(requests.Session):
     """A ``requests.Session`` subclass implementing a file-based session store."""
 
-    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate, login_params, authn_header=None):
+    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate,
+                 login_params, authn_header=None, debug=False):
         super(SessionStore, self).__init__()
         self.session_base_url = '{0}/api/session'.format(endpoint)
         self.reauthenticate = reauthenticate
         self.persist_cookie = persist_cookie
         self.login_params = login_params
         self.authn_header = authn_header
+        self._debug = debug
         if persist_cookie:
             if cookie_file is None:
                 cookie_file = DEFAULT_COOKIE_FILE
@@ -145,10 +183,17 @@ class SessionStore(requests.Session):
     def cimi_login(self, login_params):
         self.login_params = login_params
         if self.login_params:
-            return self.request('POST', self.session_base_url,
-                                headers={'Content-Type': 'application/json',
-                                         'Accept': 'application/json'},
-                                json={'template': login_params})
+            method = 'POST'
+            endpoint = self.session_base_url
+            headers = {'Content-Type': 'application/json',
+                       'Accept': 'application/json'}
+            json = {'template': login_params}
+            if self._debug:
+                _request_debug(method, endpoint, json=json, headers=headers)
+            response = self.request(method, endpoint, headers=headers, json=json)
+            if self._debug:
+                _response_debug(response)
+            return response
         else:
             return None
 
@@ -203,7 +248,8 @@ class Api(object):
         self.endpoint = endpoint
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds),
-                                    authn_header=authn_header)
+                                    authn_header=authn_header,
+                                    debug=debug)
         self.session.verify = not insecure
         if insecure:
             try:
@@ -335,40 +381,6 @@ class Api(object):
 
         return resource_id
 
-    def _request_debug(self, method, endpoint, params=None, json=None,
-                       data=None, headers: Optional[dict]=None):
-        print('::: HTTP Request -> Response :::')
-        print('>>> Request')
-        url_res = urlparse(endpoint)
-        print('{0} {1}'.format(method, url_res.path))
-        print('Host: {}'.format(url_res.netloc))
-        for k, v in headers.items():
-            print('{0}: {1}'.format(k, v))
-        if any([params, json, data]):
-            print()
-        if params:
-            print('params:', params)
-        if json:
-            pp(json)
-        if data:
-            dlen = len(data)
-            for k, v in data.items():
-                print('{0}={1}'.format(k, v))
-                dlen -= 1
-                if dlen > 0:
-                    print('&')
-        print('<<< Request')
-
-    def _response_debug(self, response: requests.Response):
-        print('>>> Response')
-        print(response.status_code, response.reason)
-        for k, v in response.headers.items():
-            print('{0}: {1}'.format(k, v))
-        print()
-        print(response.text)
-        # pp(response.json())
-        print('<<< Response')
-
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
         json_header = {'Accept': 'application/json'}
         if headers:
@@ -377,7 +389,7 @@ class Api(object):
             headers = json_header
         endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
-            self._request_debug(method, endpoint, params, json, data, headers)
+            _request_debug(method, endpoint, params, json, data, headers)
         response = self.session.request(method, endpoint,
                                         headers=headers,
                                         allow_redirects=False,
@@ -385,7 +397,7 @@ class Api(object):
                                         json=json,
                                         data=data)
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
-            self._response_debug(response)
+            _response_debug(response)
         try:
             response.raise_for_status()
         except HTTPError as e:
