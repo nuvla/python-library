@@ -1,6 +1,14 @@
 
 from nuvla.api import Api as Nuvla
 
+from .callback import Callback
+from .credential import Credential
+from .deployment import Deployment
+from .deployment_parameter import DeploymentParameter
+from .module import Module
+from .notification import Notification
+
+
 class ResourceBase:
 
     resource = None
@@ -37,4 +45,3 @@ class ResourceBase:
            fltr += f' and {filter}'
         res = self.nuvla.search(self.resource, filter=fltr)
         return [r.data['id'] for r in res.resources]
-

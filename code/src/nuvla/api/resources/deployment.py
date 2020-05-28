@@ -80,6 +80,14 @@ class Deployment(object):
         return deployment['parent']
 
     @staticmethod
+    def compatibility(deployment):
+        return Deployment.module(deployment).get('compatibility', 'swarm')
+
+    @staticmethod
+    def is_compatibility_docker_compose(deployment):
+        return Deployment.compatibility(deployment) == 'docker-compose'
+
+    @staticmethod
     def get_port_name_value(port_mapping):
         port_details = port_mapping.split(':')
         return '.'.join([port_details[0], port_details[2]]), port_details[1]
@@ -283,7 +291,6 @@ class Deployment(object):
             return []
         return res.data['resources']
 
-
     def init_logs(self, deployment: CimiResource, service: str,
                   since: Optional[datetime] = None) -> CimiResource:
         """
@@ -474,4 +481,3 @@ class Deployment(object):
 
     def set_state_error(self, resource_id):
         self.set_state(resource_id, self.STATE_ERROR)
-
