@@ -14,7 +14,7 @@ class Credential(ResourceBase):
 
 class CredentialK8s(Credential):
 
-    def add(self, ca, cert, key, infra_service_id, name, description=None):
+    def create(self, ca, cert, key, infra_service_id, name, description=None):
         iscred_k8s = {
             "name": name,
             "description": description or name,
@@ -26,5 +26,4 @@ class CredentialK8s(Credential):
                 "key": key
             }
         }
-        res = self.nuvla.add(self.resource, iscred_k8s)
-        return res.data['resource-id']
+        return self.add(iscred_k8s)

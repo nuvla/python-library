@@ -1,12 +1,9 @@
-from .utils import check_created
+from . import ResourceBase
 
 
-class Callback:
+class Callback(ResourceBase):
 
     resource = 'callback'
-
-    def __init__(self, nuvla):
-        self.nuvla = nuvla
 
     def create(self, action_name, target_resource, data=None, expires=None, acl=None):
         """
@@ -28,6 +25,4 @@ class Callback:
         if acl:
             callback.update({"acl": acl})
 
-        resource_id = check_created(self.nuvla.add(self.resource, callback),
-                                    'Failed to create callback.')
-        return resource_id
+        return self.add(callback)

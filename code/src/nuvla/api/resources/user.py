@@ -1,14 +1,12 @@
 
 from requests.exceptions import HTTPError
-from .utils import check_created
-from ..api import Api as Nuvla, NuvlaError
+
+from . import ResourceBase
+from ..api import NuvlaError
 
 
-class User(object):
+class User(ResourceBase):
     resource = 'user'
-
-    def __init__(self, nuvla: Nuvla):
-        self.nuvla = nuvla
 
     def create(self, template: dict) -> str:
         """
@@ -17,8 +15,7 @@ class User(object):
         :param template:
         :return: string
         """
-        res = self.nuvla.add(self.resource, template)
-        return check_created(res, 'Failed to create user.')
+        return self.add(template)
 
     def login_password(self, username, password):
         response = self.nuvla.login_password(username, password)

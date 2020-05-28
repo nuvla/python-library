@@ -1,5 +1,8 @@
 
+from typing import Union
+
 from nuvla.api import Api as Nuvla
+from nuvla.api.models import CimiResource
 
 from .callback import Callback
 from .credential import Credential
@@ -9,9 +12,45 @@ from .module import Module
 from .notification import Notification
 
 
+class ResourceNotFound(Exception):
+    pass
+
+
+class ResourceCreateError(Exception):
+    def __init__(self, reason, response=None):
+        super(ResourceCreateError, self).__init__(reason)
+        self.reason = reason
+        self.response = response
+
+
+def check_created(resp, errmsg=''):
+    """
+    Returns id of the created resource or raises ResourceCreateError.
+    :param resp: nuvla.api.models.CimiResponse
+    :param errmsg: error message
+    :return: str, resource id
+    """
+    if resp.data['status'] == 201:
+        return resp.data['resource-id']
+    else:
+        if errmsg:
+            msg = '{0} : {1}'.format(errmsg, resp.data['message'])
+        else:
+            msg = resp.data['message']
+        raise ResourceCreateError(msg, resp)
+
+
 class ResourceBase:
 
     resource = None
+
+    @staticmethod
+    def id(resource: Union[dict, CimiResource]):
+        key = 'id'
+        if isinstance(resource, dict):
+            return resource[key]
+        else:
+            return resource.data[key]
 
     def __init__(self, nuvla: Nuvla):
         self.nuvla = nuvla
@@ -22,8 +61,8 @@ class ResourceBase:
         """Creates resource of type `self.resource` using provided `data`.
         Returns created resource ID.
         """
-        response = self.nuvla.add(self.resource, data)
-        return response.data['resource-id']
+        return check_created(self.nuvla.add(self.resource, data),
+                             f'Failed to create {self.resource}.')
 
     def get(self, resource_id: str) -> dict:
         """Returns document identified by `resource_id`.

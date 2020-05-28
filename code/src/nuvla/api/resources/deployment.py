@@ -4,9 +4,8 @@ import time
 from typing import Union, Optional, List, Dict
 from datetime import datetime, timezone, timedelta
 
-from . import ResourceBase
-from .utils import check_created, ResourceNotFound
-from ..api import Api as Nuvla, NuvlaResourceOperationNotAvailable
+from . import ResourceBase, ResourceNotFound
+from ..api import NuvlaResourceOperationNotAvailable
 from ..models import CimiResource, CimiResponse
 
 
@@ -14,7 +13,7 @@ class DeploymentOperationNotAvailable(Exception):
     pass
 
 
-class Deployment(object):
+class Deployment(ResourceBase):
     """Stateless interface to Nuvla module deployment."""
 
     STATE_STARTED = 'STARTED'
@@ -22,14 +21,6 @@ class Deployment(object):
     STATE_ERROR = 'ERROR'
 
     resource = 'deployment'
-
-    @staticmethod
-    def id(deployment: Union[dict, CimiResource]):
-        key = 'id'
-        if isinstance(deployment, dict):
-            return deployment[key]
-        else:
-            return deployment.data[key]
 
     @staticmethod
     def uuid(deployment):
@@ -107,9 +98,6 @@ class Deployment(object):
         else:
             d = deployment.data
         return dict(d.get('module', {}).get('content', {}).get('urls', []))
-
-    def __init__(self, nuvla: Nuvla):
-        self.nuvla = nuvla
 
     def _set_data(self, deployment: dict, sets=None, records=None,
                   objects=None):
@@ -211,8 +199,7 @@ class Deployment(object):
         """
         module = {"module": {"href": module_id}}
 
-        res = self.nuvla.add(self.resource, module)
-        deployment_id = check_created(res, 'Failed to create deployment.')
+        deployment_id = self.add(module)
 
         # Get created deployment and update if needed.
         dpl = self.get(deployment_id)

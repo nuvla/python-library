@@ -37,7 +37,7 @@ class InfraService(ResourceBase):
         if subtype:
             self.subtype = subtype
 
-    def add(self, endpoint, infra_group_id, name=None, description=None) -> str:
+    def create(self, endpoint, infra_group_id, name=None, description=None) -> str:
         infra_service = {
             "template": {
                 "href": self.infra_service_template,
@@ -48,7 +48,7 @@ class InfraService(ResourceBase):
                 "parent": infra_group_id
             }
         }
-        return super().add(infra_service)
+        return self.add(infra_service)
 
 
 class InfraServiceK8s(InfraService):
@@ -123,10 +123,10 @@ class InfraServiceK8s(InfraService):
 
         if not name:
             name = cluster_name
-        is_id = self.add(cluster_url, group_id, name, description or name)
+        is_id = self.create(cluster_url, group_id, name, description or name)
 
         cred = CredentialK8s(self.nuvla)
-        isc_id = cred.add(cluster_ca_pem, user_cert, user_key, is_id, name)
+        isc_id = cred.create(cluster_ca_pem, user_cert, user_key, is_id, name)
         return is_id, isc_id
 
 
