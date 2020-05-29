@@ -1,27 +1,29 @@
 
-class Credential(object):
+from . import ResourceBase
 
-    @staticmethod
-    def id(credential):
-        return credential['id']
 
-    def __init__(self, nuvla):
-        self.nuvla = nuvla
+class Credential(ResourceBase):
+
+    resource = 'credential'
 
     def find_parent(self, parent):
         filters = "parent='{}'".format(parent)
-        creds = self.nuvla.search('credential', filter=filters, select="id")
+        creds = self.nuvla.search(self.resource, filter=filters, select="id")
         return creds.resources
 
-    def find(self, infra_service_id):
-        """
-        Returns list of credentials for `infra_service_id` infrastructure service.
-        :param infra_service_id: str, URI
-        :return: list
-        """
-        return self.find_parent(infra_service_id)
 
-    def delete(self, resource_id):
-        return self.nuvla.delete(resource_id)
+class CredentialK8s(Credential):
 
-
+    def create(self, ca, cert, key, infra_service_id, name, description=None):
+        iscred_k8s = {
+            "name": name,
+            "description": description or name,
+            "template": {
+                "href": "credential-template/infrastructure-service-swarm",
+                "parent": infra_service_id,
+                "ca": ca,
+                "cert": cert,
+                "key": key
+            }
+        }
+        return self.add(iscred_k8s)
