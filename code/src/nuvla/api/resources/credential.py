@@ -15,7 +15,7 @@ class Credential(ResourceBase):
 class CredentialK8s(Credential):
 
     def create(self, ca, cert, key, infra_service_id, name, description=None):
-        iscred_k8s = {
+        cred = {
             "name": name,
             "description": description or name,
             "template": {
@@ -26,4 +26,20 @@ class CredentialK8s(Credential):
                 "key": key
             }
         }
-        return self.add(iscred_k8s)
+        return self.add(cred)
+
+
+class CredentialS3(Credential):
+
+    def create(self, key, secret, infra_service_id, name, description=None):
+        cred = {
+            "name": name,
+            "description": description or name,
+            "template": {
+                "href": "credential-template/infrastructure-service-minio",
+                "parent": infra_service_id,
+                "access-key": key,
+                "secret-key": secret
+            }
+        }
+        return self.add(cred)
