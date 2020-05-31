@@ -2,22 +2,20 @@
 import os
 import re
 from ..api import Api as Nuvla, NuvlaError
+from .base import ResourceBase
 
 
 APP_TYPE_K8S = 'application_kubernetes'
 APP_TYPE_DOCKER = 'application_docker'
 
 
-class Module:
+class Module(ResourceBase):
 
     resource = 'module'
 
     TYPE_PROJECT = 'project'
     TYPE_COMPONENT = 'component'
     TYPE_APPLICATION = 'application'
-
-    def __init__(self, nuvla: Nuvla):
-        self.nuvla = nuvla
 
     def find(self, **kvargs):
         return self.nuvla.search(self.resource, **kvargs)
@@ -28,7 +26,7 @@ class Module:
             return {}
         return self.get_by_id(res.resources[0].id)
 
-    def add_module(self, module: dict, exist_ok=False) -> str:
+    def create(self, module: dict, exist_ok=False) -> str:
         """
         Adds new `module` of type project, component and application.
         Modules of different types can be built by ProjectBuilder, AppBuilderK8s,
@@ -67,6 +65,7 @@ class Module:
     def get_urls(self, module_id) -> dict:
         res = self.nuvla.get(module_id)
         return dict(res.data.get('content', {}).get('urls'))
+
 
 class ModuleBuilder:
 

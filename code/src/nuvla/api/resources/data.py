@@ -19,15 +19,15 @@ class DataObjectS3(ResourceBase):
     def __init__(self, nuvla: Nuvla):
         super().__init__(nuvla)
 
-    def add(self, content: Union[str, bytes], bucket, object_path, s3_cred_id,
-            content_type='text/plain', name=None, description=None,
-            tags: Optional[list]=None, md5sum: Optional[str]=None) -> str:
+    def create(self, content: Union[str, bytes], bucket, object_path, s3_cred_id,
+               content_type='text/plain', name=None, description=None,
+               tags: Optional[list]=None, md5sum: Optional[str]=None) -> str:
         """Stores `content` in S3 defined by `s3_cred_id` and registers the
         object as data-object in Nuvla. Returns data-object resource ID.
         `content` and `content_type` should match (e.g. str and plain/text,
         bytes and image/png).
         """
-        data = {
+        doc = {
             "template": {
                 "name": name or object_path,
                 "description": description or name or object_path,
@@ -42,11 +42,11 @@ class DataObjectS3(ResourceBase):
             }
         }
         if tags:
-            data.update({'tags': tags})
+            doc["template"].update({'tags': tags})
         if md5sum:
-            data.update({'md5sum': md5sum})
+            doc["template"].update({'md5sum': md5sum})
 
-        data_object_id = super().add(data)
+        data_object_id = self.add(doc)
 
         # Upload data.
         data_object = self.nuvla.get(data_object_id)
