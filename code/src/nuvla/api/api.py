@@ -54,6 +54,7 @@
 
 """
 
+import json
 import logging
 import os
 import stat
@@ -91,7 +92,7 @@ class NuvlaResourceOperationNotAvailable(KeyError):
         self.operation = operation
 
 
-def _request_debug(method, endpoint, params=None, json=None,
+def _request_debug(method, endpoint, params=None, doc=None,
                    data=None, headers: Optional[dict]=None):
     print('::: HTTP Request -> Response :::')
     print('>>> Request')
@@ -104,8 +105,8 @@ def _request_debug(method, endpoint, params=None, json=None,
         print()
     if params:
         print('params:', params)
-    if json:
-        pp(json)
+    if doc:
+        print(json.dumps(doc, indent=2, sort_keys=True))
     if data:
         dlen = len(data)
         for k, v in data.items():
@@ -123,7 +124,6 @@ def _response_debug(response: requests.Response):
         print('{0}: {1}'.format(k, v))
     print()
     print(response.text)
-    # pp(response.json())
     print('<<< Response')
 
 
@@ -189,7 +189,7 @@ class SessionStore(requests.Session):
                        'Accept': 'application/json'}
             json = {'template': login_params}
             if self._debug:
-                _request_debug(method, endpoint, json=json, headers=headers)
+                _request_debug(method, endpoint, doc=json, headers=headers)
             response = self.request(method, endpoint, headers=headers, json=json)
             if self._debug:
                 _response_debug(response)
