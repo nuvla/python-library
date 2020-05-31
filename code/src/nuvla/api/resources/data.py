@@ -3,7 +3,7 @@ import requests
 from typing import Optional, Union
 
 from nuvla.api import Api as Nuvla
-from . import ResourceBase
+from .base import ResourceBase
 
 
 class DataRecord(ResourceBase):

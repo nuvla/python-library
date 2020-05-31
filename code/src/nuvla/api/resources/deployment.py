@@ -4,7 +4,7 @@ import time
 from typing import Union, Optional, List, Dict
 from datetime import datetime, timezone, timedelta
 
-from . import ResourceBase, ResourceNotFound
+from .base import ResourceBase, ResourceNotFound
 from ..api import NuvlaResourceOperationNotAvailable
 from ..models import CimiResource, CimiResponse
 

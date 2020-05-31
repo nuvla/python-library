@@ -1,5 +1,5 @@
 
-from . import ResourceBase
+from .base import ResourceBase
 
 
 class Credential(ResourceBase):

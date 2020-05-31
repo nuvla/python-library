@@ -6,7 +6,7 @@ import yaml
 
 from nuvla.api import Api as Nuvla
 from nuvla.api.resources.credential import CredentialK8s
-from . import ResourceBase
+from .base import ResourceBase
 
 """
 Parent/child hierarchy of the infrastructure service related resources.
