@@ -156,14 +156,18 @@ module/92614bdc-4afa-49e1-891f-0eb3a4db0635
 
 # Create data records
 
-Data records is on of the two data types in Nuvla. It is designed to hold
+Data records is one of the two data types in Nuvla. It is designed to hold
 location of the data and its description - meta-data. It's a document with a
-number of requered root level fields with all the rest being free schema for the
+number of required root level fields with all the rest being free schema for the
 user to define prefixed with <user prefix>:.
 
 ```
-$ ./create-data-record.py
-data-record/93344bdc-4afa-49e1-891f-0eb3a4db0886
+$ ./create-data-record.py 
+created data record: data-record/abcda0d5-499d-4c89-8c1d-7f5d8108a7d0
+deleted data record: data-record/abcda0d5-499d-4c89-8c1d-7f5d8108a7d0
+created data record: data-record/f863c02c-996a-43d7-928c-ee46f4274f38
+deleted data record: data-record/f863c02c-996a-43d7-928c-ee46f4274f38
+$
 ```
 
 # Create data object
