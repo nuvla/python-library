@@ -199,6 +199,26 @@ $ ./create-data-set.py
 data-set/98744bdc-4afa-49e1-891f-0eb3a4db0ea7
 ```
 
+# Create project and application
+
+In Nuvla.io, users can define there container based applications as `component`
+or `application`. `component` is suitable for a simple single container
+application that would be deployed on a Docker Swarm. `application` is for
+defining complex multi-container applications for deployment on Docker Swarm or
+Kubernetes. Applications must be stored under projects. Projects can be nested.
+
+In Nuvla - projects, components and applications are all `modules` of the three
+different types. That is why in `create-app.py` `Module` class is used first to
+create `project` and then `application` inside of the project gets created.
+
+```
+$ ./create-app.py 
+project id: module/45caaeb1-5887-4280-a41e-8ab1af666817
+k8s app id: module/7388adf6-82ba-4a40-9a09-ab1e102e55fc
+```
+
+Please refer to the script for more details.
+
 # Deploy Application
 
 ```
