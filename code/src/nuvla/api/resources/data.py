@@ -9,8 +9,10 @@ from .base import ResourceBase
 class DataRecord(ResourceBase):
     resource = 'data-record'
 
-    def __init__(self, nuvla: Nuvla):
-        super().__init__(nuvla)
+    def create(self, data: dict, infra_service_id: str):
+        if isinstance(data, dict):
+            data.update({'infrastructure-service': infra_service_id})
+            return self.add(data)
 
 
 class DataObjectS3(ResourceBase):
