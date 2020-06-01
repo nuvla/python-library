@@ -1,7 +1,7 @@
 
 from requests.exceptions import HTTPError
 
-from . import ResourceBase
+from .base import ResourceBase
 from ..api import NuvlaError
 
 

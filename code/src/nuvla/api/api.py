@@ -59,7 +59,6 @@ import logging
 import os
 import stat
 from typing import Optional
-from pprint import pp
 
 import requests
 from requests.cookies import MockRequest
@@ -94,6 +93,7 @@ class NuvlaResourceOperationNotAvailable(KeyError):
 
 def _request_debug(method, endpoint, params=None, doc=None,
                    data=None, headers: Optional[dict]=None):
+    # TODO: Use logging library.
     print('::: HTTP Request -> Response :::')
     print('>>> Request')
     url_res = urlparse(endpoint)
@@ -118,6 +118,7 @@ def _request_debug(method, endpoint, params=None, doc=None,
 
 
 def _response_debug(response: requests.Response):
+    # TODO: Use logging library.
     print('>>> Response')
     print(response.status_code, response.reason)
     for k, v in response.headers.items():
