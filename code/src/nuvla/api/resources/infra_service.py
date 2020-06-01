@@ -20,9 +20,9 @@ infrastructure-service-group (no type)
 class InfraServiceGroup(ResourceBase):
     resource = 'infrastructure-service-group'
 
-    def add(self, name, description=None) -> str:
-        return super().add({'name': name,
-                            'description': description or name})
+    def create(self, name, description=None) -> str:
+        return self.add({'name': name,
+                         'description': description or name})
 
 
 class InfraService(ResourceBase):
