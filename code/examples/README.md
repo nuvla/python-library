@@ -216,14 +216,21 @@ data-set/98744bdc-4afa-49e1-891f-0eb3a4db0ea7
 
 # Deploy Application
 
+In Nuvla, deployments are created from modules. [deploy-app.py](deploy-app.py)
+find application by its path in Nuvla and launches it. The script also attaches
+some data to the deployment. It waits for the deployment to enter running or
+failed states, and eventually terminates it.
+
 ```
 $ ./deploy-app.py
 deployment/ec344bdc-4afa-49e1-891f-0eb3a4db0971
 ```
 
+<!--
 # Get Application logs
 
 ```
 $ ./app-logs.py
 ...
 ```
+-->
