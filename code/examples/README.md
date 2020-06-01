@@ -140,21 +140,27 @@ Docker Registry creds:  credential/0bfc1e15-3e52-4b17-bdf0-c55fc3d74090
 $
 ```
 
-# Create Application
+# Create Project and Application
 
-Internally Nuvla uses concept of a module, and structures user defined projects
-and applications using the modules. There are following module types: project,
-component, application. 
+In Nuvla.io, users can define there container based applications as `component`
+or `application`. `component` is suitable for a simple single container
+application that would be deployed on a Docker Swarm. `application` is for
+defining complex multi-container applications for deployment on Docker Swarm or
+Kubernetes. Applications must be stored under projects. Projects can be nested.
 
-[create-app.py](create-app.py) first creates a module of type project and then
-creates an application of subtype kubernetes inside of the project.
+In Nuvla - projects, components and applications are all `modules` of the three
+different types. That is why in `create-app.py` `Module` class is used first to
+create `project` and then `application` inside of the project gets created.
 
 ```
-$ ./create-app.py
-module/92614bdc-4afa-49e1-891f-0eb3a4db0635
+$ ./create-app.py 
+project id: module/45caaeb1-5887-4280-a41e-8ab1af666817
+k8s app id: module/7388adf6-82ba-4a40-9a09-ab1e102e55fc
 ```
 
-# Create data records
+Please refer to the script for more details.
+
+# Create Data Records
 
 Data records is one of the two data types in Nuvla. It is designed to hold
 location of the data and its description - meta-data. It's a document with a
@@ -170,13 +176,21 @@ deleted data record: data-record/f863c02c-996a-43d7-928c-ee46f4274f38
 $
 ```
 
-# Create data object
+# Create Data Object
+
+`data-object` is a special resource that helps users upload and download their
+data to/from S3. Before running [create-data-object.py](create-data-object.py)
+ensure you've added S3 infrastructure service and credentials to Nuvla, and set
+its ID in the script. The script creates binary and text objects on S3,
+downloads them and finally, deletes them from Nuvla and S3.
 
 ```
 $ ./create-data-object.py
-data-object/72614bdc-4afa-49e1-891f-0eb3a4db0634
+.png object id: data-object/c3e2206d-a11b-3577-afc5-301d16eec2cb
+.txt object id: data-object/5f230efb-33f7-3664-91e7-3dca8fb128b3
 ```
 
+<!--
 # Search for data records/objects
 
 ```
@@ -198,26 +212,7 @@ deleted: data-record/93344bdc-4afa-49e1-891f-0eb3a4db0886
 $ ./create-data-set.py
 data-set/98744bdc-4afa-49e1-891f-0eb3a4db0ea7
 ```
-
-# Create project and application
-
-In Nuvla.io, users can define there container based applications as `component`
-or `application`. `component` is suitable for a simple single container
-application that would be deployed on a Docker Swarm. `application` is for
-defining complex multi-container applications for deployment on Docker Swarm or
-Kubernetes. Applications must be stored under projects. Projects can be nested.
-
-In Nuvla - projects, components and applications are all `modules` of the three
-different types. That is why in `create-app.py` `Module` class is used first to
-create `project` and then `application` inside of the project gets created.
-
-```
-$ ./create-app.py 
-project id: module/45caaeb1-5887-4280-a41e-8ab1af666817
-k8s app id: module/7388adf6-82ba-4a40-9a09-ab1e102e55fc
-```
-
-Please refer to the script for more details.
+-->
 
 # Deploy Application
 
