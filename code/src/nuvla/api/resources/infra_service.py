@@ -78,7 +78,7 @@ class InfraServiceK8s(InfraService):
 
 
 class InfraServiceDocker(InfraService):
-    subtype = 'docker'
+    subtype = 'swarm'
 
 
 class InfraServiceS3(InfraService):
