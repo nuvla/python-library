@@ -1,12 +1,12 @@
 
 import os
 import re
-from ..api import Api as Nuvla, NuvlaError
+from ..api import NuvlaError
 from .base import ResourceBase
 
 
 APP_TYPE_K8S = 'application_kubernetes'
-APP_TYPE_DOCKER = 'application_docker'
+APP_TYPE_DOCKER = 'application'
 
 
 class Module(ResourceBase):
@@ -131,6 +131,8 @@ class ComponentBuidler(ModuleBuilder):
 
 class AppBuilder(ModuleBuilder):
 
+    type = 'application'
+
     module_requires_app = ['content']
 
     script_key = None
@@ -236,21 +238,15 @@ class AppBuilder(ModuleBuilder):
         for r in self.content_requires:
             if r not in self.module['content']:
                 raise Exception('{} is missing in module["content"].'.format(r))
-        module = super(AppBuilder, self).build()
-        return self.module
+        return super(AppBuilder, self).build()
 
 
 class AppBuilderK8s(AppBuilder):
     type = APP_TYPE_K8S
     script_key = 'docker-compose'
 
-    def __index__(self, base=None):
-        super().__init__(base)
-
 
 class AppBuilderDocker(AppBuilder):
     type = APP_TYPE_DOCKER
     script_key = 'docker-compose'
 
-    def __index__(self, base=None):
-        super().__init__(base)

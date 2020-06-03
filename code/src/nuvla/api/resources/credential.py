@@ -120,7 +120,18 @@ class CredentialK8s(Credential):
 
 
 class CredentialDockerSwarm(Credential):
-    pass
+
+    subtype = 'infrastructure-service-swarm'
+
+    def create(self, ca, cert, key, infra_service_id, name, description=None):
+        cred_data = {
+            "ca": ca,
+            "cert": cert,
+            "key": key
+        }
+        return self.create_from_template(cred_data, infra_service_id, name,
+                                         description)
+
 
 
 class CredentialS3(Credential):
