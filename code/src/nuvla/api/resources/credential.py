@@ -28,7 +28,7 @@ class Credential(ResourceBase):
     def id_by_name(self, name, filter=None) -> list:
         return super().id_by_name(name, filter=f"subtype='{self.subtype}'")
 
-    def create_from_template(self, cread_data, parent, name, description=None):
+    def create_from_template(self, cred_data, parent, name, description=None):
         cred = {
             "name": name,
             "description": description or name,
@@ -37,11 +37,26 @@ class Credential(ResourceBase):
                 "parent": parent
             }
         }
-        cred['template'].update(cread_data)
+        cred['template'].update(cred_data)
         return self.add(cred)
 
 
+class CredentialCOE(Credential):
+    def create(self, ca, cert, key, infra_service_id, name, description=None):
+        cred_data = {
+            "ca": ca,
+            "cert": cert,
+            "key": key
+        }
+        return self.create_from_template(cred_data, infra_service_id, name,
+                                         description)
+
+
 class KubeConfig:
+
+    @staticmethod
+    def decode(data):
+        return base64.b64decode(data).decode()
 
     @staticmethod
     def read_config(fname) -> dict:
@@ -59,12 +74,12 @@ class KubeConfig:
                 user_n = cx.get('context').get('user')
         return cluster_n, user_n
 
-    @staticmethod
-    def get_cluster_cacert(config, cluster_name):
+    @classmethod
+    def get_cluster_cacert(cls, config, cluster_name):
         for c in config.get('clusters'):
             if c.get('name') == cluster_name:
                 ca = c.get('cluster').get('certificate-authority-data')
-                return base64.b64decode(ca).decode()
+                return cls.decode(ca)
 
     @staticmethod
     def get_cluster_endpoint(config, cluster_name):
@@ -72,29 +87,20 @@ class KubeConfig:
             if c.get('name') == cluster_name:
                 return c.get('cluster').get('server')
 
-    @staticmethod
-    def get_client_creds(config, user_name):
+    @classmethod
+    def get_client_creds(cls, config, user_name):
         cert = None
         key = None
         for u in config.get('users'):
             if u.get('name') == user_name:
                 cert = u.get('user').get('client-certificate-data')
                 key = u.get('user').get('client-key-data')
-        return base64.b64decode(cert).decode(), base64.b64decode(key).decode()
+        return cls.decode(cert), cls.decode(key)
 
 
-class CredentialK8s(Credential):
+class CredentialK8s(CredentialCOE):
 
     subtype = 'infrastructure-service-swarm'
-
-    def create(self, ca, cert, key, infra_service_id, name, description=None):
-        cred_data = {
-            "ca": ca,
-            "cert": cert,
-            "key": key
-        }
-        return self.create_from_template(cred_data, infra_service_id, name,
-                                         description)
 
     def create_from_config(self, filename, infra_service_id, context, name=None,
                            description=None):
@@ -119,19 +125,9 @@ class CredentialK8s(Credential):
                            name or cluster_name, description)
 
 
-class CredentialDockerSwarm(Credential):
+class CredentialDockerSwarm(CredentialCOE):
 
     subtype = 'infrastructure-service-swarm'
-
-    def create(self, ca, cert, key, infra_service_id, name, description=None):
-        cred_data = {
-            "ca": ca,
-            "cert": cert,
-            "key": key
-        }
-        return self.create_from_template(cred_data, infra_service_id, name,
-                                         description)
-
 
 
 class CredentialS3(Credential):
