@@ -54,11 +54,11 @@
 
 """
 
-from __future__ import absolute_import
-
+import json
 import logging
 import os
 import stat
+from typing import Optional
 
 import requests
 from requests.cookies import MockRequest
@@ -66,7 +66,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from http.cookiejar import MozillaCookieJar
 from urllib.parse import urlparse
 
-from . import models
+from .models import CimiResource, CimiCollection, CimiResponse, CloudEntryPoint
 
 logger = logging.getLogger(__name__)
 
@@ -75,25 +75,71 @@ DEFAULT_ENDPOINT = 'https://nuvla.io'
 DEFAULT_COOKIE_FILE = os.path.expanduser('~/.nuvla/cookies.txt')
 HREF_SESSION_TMPL_PASSWORD = 'session-template/password'
 HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
+CLOUD_ENTRY_POINT_ID = 'cloud-entry-point'
 
 
 class NuvlaError(Exception):
-    def __init__(self, reason, response=None):
+    def __init__(self, reason, response: Optional[requests.Response] = None):
         super(NuvlaError, self).__init__(reason)
         self.reason = reason
         self.response = response
 
 
+class NuvlaResourceOperationNotAvailable(KeyError):
+    def __init__(self, reason, operation):
+        super().__init__(reason)
+        self.operation = operation
+
+
+def _request_debug(method, endpoint, params=None, doc=None,
+                   data=None, headers: Optional[dict]=None):
+    # TODO: Use logging library.
+    print('::: HTTP Request -> Response :::')
+    print('>>> Request')
+    url_res = urlparse(endpoint)
+    print('{0} {1}'.format(method, url_res.path))
+    print('Host: {}'.format(url_res.netloc))
+    for k, v in headers.items():
+        print('{0}: {1}'.format(k, v))
+    if any([params, json, data]):
+        print()
+    if params:
+        print('params:', params)
+    if doc:
+        print(json.dumps(doc, indent=2, sort_keys=True))
+    if data:
+        dlen = len(data)
+        for k, v in data.items():
+            print('{0}={1}'.format(k, v))
+            dlen -= 1
+            if dlen > 0:
+                print('&')
+    print('<<< Request')
+
+
+def _response_debug(response: requests.Response):
+    # TODO: Use logging library.
+    print('>>> Response')
+    print(response.status_code, response.reason)
+    for k, v in response.headers.items():
+        print('{0}: {1}'.format(k, v))
+    print()
+    print(response.text)
+    print('<<< Response')
+
+
 class SessionStore(requests.Session):
     """A ``requests.Session`` subclass implementing a file-based session store."""
 
-    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate, login_params, authn_header=None):
+    def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate,
+                 login_params, authn_header=None, debug=False):
         super(SessionStore, self).__init__()
         self.session_base_url = '{0}/api/session'.format(endpoint)
         self.reauthenticate = reauthenticate
         self.persist_cookie = persist_cookie
         self.login_params = login_params
         self.authn_header = authn_header
+        self._debug = debug
         if persist_cookie:
             if cookie_file is None:
                 cookie_file = DEFAULT_COOKIE_FILE
@@ -138,10 +184,17 @@ class SessionStore(requests.Session):
     def cimi_login(self, login_params):
         self.login_params = login_params
         if self.login_params:
-            return self.request('POST', self.session_base_url,
-                                headers={'Content-Type': 'application/json',
-                                         'Accept': 'application/json'},
-                                json={'template': login_params})
+            method = 'POST'
+            endpoint = self.session_base_url
+            headers = {'Content-Type': 'application/json',
+                       'Accept': 'application/json'}
+            json = {'template': login_params}
+            if self._debug:
+                _request_debug(method, endpoint, doc=json, headers=headers)
+            response = self.request(method, endpoint, headers=headers, json=json)
+            if self._debug:
+                _response_debug(response)
+            return response
         else:
             return None
 
@@ -182,7 +235,7 @@ class Api(object):
     """ This class is a Python wrapper&helper of the native Nuvla REST API"""
 
     def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True, cookie_file=None,
-                 reauthenticate=False, login_creds=None, authn_header=None):
+                 reauthenticate=False, login_creds=None, authn_header=None, debug=False):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
         :param insecure: Don't check server certificate or you are using a http connection.
@@ -196,7 +249,8 @@ class Api(object):
         self.endpoint = endpoint
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds),
-                                    authn_header=authn_header)
+                                    authn_header=authn_header,
+                                    debug=debug)
         self.session.verify = not insecure
         if insecure:
             try:
@@ -208,6 +262,7 @@ class Api(object):
                     urllib3.exceptions.InsecureRequestWarning)
         self._username = None
         self._cimi_cloud_entry_point = None
+        self._debug = debug
 
     def login(self, login_params):
         """Uses given 'login_params' to log into the Nuvla server. The
@@ -242,7 +297,7 @@ class Api(object):
         :param password:
         :return: see login()
         """
-        logging.warn('Deprecated! Use instead login_password')
+        logging.warning('Deprecated! Use instead login_password')
         return self.login(to_login_params({'username': username,
                                            'password': password}))
 
@@ -294,8 +349,8 @@ class Api(object):
         return self.current_session() is not None
 
     def _cimi_get_cloud_entry_point(self):
-        cep_json = self._cimi_get('cloud-entry-point')
-        return models.CloudEntryPoint(cep_json)
+        cep_json = self._cimi_get(CLOUD_ENTRY_POINT_ID)
+        return CloudEntryPoint(cep_json)
 
     @property
     def cloud_entry_point(self):
@@ -304,11 +359,12 @@ class Api(object):
         return self._cimi_cloud_entry_point
 
     @staticmethod
-    def _cimi_find_operation_href(cimi_resource, operation):
+    def _cimi_find_operation_href(cimi_resource: CimiResource, operation: str):
         operation_href = cimi_resource.operations.get(operation, {}).get('href')
 
         if not operation_href:
-            raise KeyError("Operation '{0}' not found.".format(operation))
+            raise NuvlaResourceOperationNotAvailable(
+                "Operation '{0}' not found.".format(operation), operation)
 
         return operation_href
 
@@ -332,12 +388,17 @@ class Api(object):
             headers.update(json_header)
         else:
             headers = json_header
-        response = self.session.request(method, '{0}/{1}/{2}'.format(self.endpoint, 'api', uri),
+        endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
+        if self._debug and uri != CLOUD_ENTRY_POINT_ID:
+            _request_debug(method, endpoint, params, json, data, headers)
+        response = self.session.request(method, endpoint,
                                         headers=headers,
                                         allow_redirects=False,
                                         params=params,
                                         json=json,
                                         data=data)
+        if self._debug and uri != CLOUD_ENTRY_POINT_ID:
+            _response_debug(response)
         try:
             response.raise_for_status()
         except HTTPError as e:
@@ -371,7 +432,7 @@ class Api(object):
     def _cimi_delete(self, resource_id=None):
         return self._cimi_request('DELETE', resource_id)
 
-    def get(self, resource_id, **kwargs):
+    def get(self, resource_id, **kwargs) -> CimiResource:
         """ Retreive a CIMI resource by it's resource id
 
         :param      resource_id: The id of the resource to retrieve
@@ -384,9 +445,9 @@ class Api(object):
         :rtype:     CimiResource
         """
         resp_json = self._cimi_get(resource_id=resource_id, params=kwargs)
-        return models.CimiResource(resp_json)
+        return CimiResource(resp_json)
 
-    def edit(self, resource_id, data, **kwargs):
+    def edit(self, resource_id, data, **kwargs) -> CimiResource:
         """ Edit a CIMI resource by it's resource id
 
         :param      resource_id: The id of the resource to edit
@@ -400,13 +461,13 @@ class Api(object):
         :type       select: str or list of str
 
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
-        :rtype:     CimiResponse
+        :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'edit')
-        return models.CimiResponse(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
+        return CimiResource(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
 
-    def delete(self, resource_id):
+    def delete(self, resource_id) -> CimiResponse:
         """ Delete a CIMI resource by it's resource id
 
         :param  resource_id: The id of the resource to delete
@@ -418,9 +479,9 @@ class Api(object):
         """
         resource = self.get(resource_id=resource_id)
         operation_href = self._cimi_find_operation_href(resource, 'delete')
-        return models.CimiResponse(self._cimi_delete(resource_id=operation_href))
+        return CimiResponse(self._cimi_delete(resource_id=operation_href))
 
-    def delete_bulk(self, resource_type, filter, **kwargs):
+    def delete_bulk(self, resource_type, filter, **kwargs) -> CimiResponse:
         """ Bulk delete CIMI resources of the given type (Collection).
 
         :param      resource_type: Type of the resource (Collection name).
@@ -435,7 +496,7 @@ class Api(object):
         if not isinstance(filter, str) or len(filter) == 0:
             raise NuvlaError("'filter' must be a non-empty string.")
         else:
-            return models.CimiResponse(
+            return CimiResponse(
                 self._cimi_request('DELETE', resource_type,
                                    data={'filter': filter}, headers={'bulk': 'yes'}))
 
@@ -453,9 +514,9 @@ class Api(object):
         """
         collection = self.search(resource_type=resource_type, last=0)
         operation_href = self._cimi_find_operation_href(collection, 'add')
-        return models.CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
+        return CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
 
-    def search(self, resource_type, **kwargs):
+    def search(self, resource_type, **kwargs) -> CimiCollection:
         """ Search for CIMI resources of the given type (Collection).
 
         :param      resource_type: Type of the resource (Collection name)
@@ -487,9 +548,9 @@ class Api(object):
         :rtype:     CimiCollection
         """
         resp_json = self._cimi_put(resource_type=resource_type, data=kwargs)
-        return models.CimiCollection(resp_json)
+        return CimiCollection(resp_json)
 
-    def operation(self, resource, operation, data=None):
+    def operation(self, resource: CimiResource, operation, data=None) -> CimiResponse:
         """ Execute an operation on a CIMI resource
 
         :param      resource: The resource to execute operation on.
@@ -506,4 +567,4 @@ class Api(object):
         """
         operation_href = self._cimi_find_operation_href(resource, operation)
         resp_json = self._cimi_post(operation_href, json=data)
-        return models.CimiResource(resp_json)
+        return CimiResponse(resp_json)

@@ -1,12 +1,10 @@
-from .utils import check_created
+
+from .base import ResourceBase
 
 
-class Notification:
+class Notification(ResourceBase):
 
     resource = 'notification'
-
-    def __init__(self, nuvla):
-        self.nuvla = nuvla
 
     def create(self, message, category, content_unique_id,
                target_resource=None, not_before=None, expiry=None,
@@ -29,8 +27,7 @@ class Notification:
         if acl:
             notification.update({'acl': acl})
 
-        return check_created(self.nuvla.add(self.resource, notification),
-                             'Failed to create notification.')
+        return self.add(notification)
 
     def find_by_content_unique_id(self, content_unique_id):
         resp = self.nuvla.search(self.resource,
