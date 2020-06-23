@@ -28,16 +28,21 @@ class Credential(ResourceBase):
     def id_by_name(self, name, filter=None) -> list:
         return super().id_by_name(name, filter=f"subtype='{self.subtype}'")
 
-    def create_from_template(self, cred_data, parent, name, description=None):
+    @classmethod
+    def build_template(cls, cred_data: dict, parent, name, description=None):
         cred = {
             "name": name,
             "description": description or name,
             "template": {
-                "href": f"credential-template/{self.subtype}",
+                "href": f"credential-template/{cls.subtype}",
                 "parent": parent
             }
         }
         cred['template'].update(cred_data)
+        return cred
+
+    def create_from_template(self, cred_data: dict, parent, name, description=None):
+        cred = self.build_template(cred_data, parent, name, description)
         return self.add(cred)
 
 
@@ -59,15 +64,23 @@ class KubeConfig:
         return base64.b64decode(data).decode()
 
     @staticmethod
-    def read_config(fname) -> dict:
+    def from_string(config: str) -> dict:
+        return yaml.safe_load(config)
+
+    @classmethod
+    def from_file(cls, fname: str) -> dict:
         with open(os.path.expanduser(fname)) as fh:
-            config = yaml.safe_load(fh.read())
+            config = cls.from_string(fh.read())
         return config
 
     @staticmethod
-    def get_cluster_and_user(config, context_name):
+    def get_cluster_and_user(config: dict, context_name=None):
+        """Use current context if `context_name` is not provided.
+        """
         cluster_n = None
         user_n = None
+        if not context_name:
+            context_name = config.get('current-context')
         for cx in config.get('contexts', []):
             if cx.get('name') == context_name:
                 cluster_n = cx.get('context').get('cluster')
@@ -75,20 +88,20 @@ class KubeConfig:
         return cluster_n, user_n
 
     @classmethod
-    def get_cluster_cacert(cls, config, cluster_name):
+    def get_cluster_cacert(cls, config: dict, cluster_name):
         for c in config.get('clusters'):
             if c.get('name') == cluster_name:
                 ca = c.get('cluster').get('certificate-authority-data')
                 return cls.decode(ca)
 
     @staticmethod
-    def get_cluster_endpoint(config, cluster_name):
+    def get_cluster_endpoint(config: dict, cluster_name):
         for c in config.get('clusters'):
             if c.get('name') == cluster_name:
                 return c.get('cluster').get('server')
 
     @classmethod
-    def get_client_creds(cls, config, user_name):
+    def get_client_creds(cls, config: dict, user_name):
         cert = None
         key = None
         for u in config.get('users'):
@@ -97,15 +110,33 @@ class KubeConfig:
                 key = u.get('user').get('client-key-data')
         return cls.decode(cert), cls.decode(key)
 
+    @classmethod
+    def get_certs(cls, config: dict, context_name=None):
+        """Returns CA cert, user cert and key from the requested `context_name`
+        or the current context."""
+        cluster_name, user_name = \
+            cls.get_cluster_and_user(config, context_name=context_name)
+        ca_cert = cls.get_cluster_cacert(config, cluster_name)
+        user_cert, user_key = cls.get_client_creds(config, user_name)
+        return ca_cert, user_cert, user_key
+
 
 class CredentialK8s(CredentialCOE):
 
-    subtype = 'infrastructure-service-swarm'
+    subtype = 'infrastructure-service-kubernetes'
 
-    def create_from_config(self, filename, infra_service_id, context, name=None,
-                           description=None):
+    def create_from_file(self, filename: str, infra_service_id, context,
+                         name=None, description=None):
+        return self.create_from_config(KubeConfig().from_file(filename),
+                                       infra_service_id, context, name,
+                                       description)
+
+    def create_from_config(self, conf: dict, infra_service_id, context,
+                           name=None, description=None):
+        """Take kubectl `conf` as dict (representation of ~/.kube/conf YAML),
+        extract K8s cluster CA and user certs from `context`.
+        """
         kube = KubeConfig()
-        conf = kube.read_config(filename)
         cluster_name, user_name = kube.get_cluster_and_user(conf, context)
         if not cluster_name and not user_name:
             raise Exception(f'K8s: failed to find cluster or user '
