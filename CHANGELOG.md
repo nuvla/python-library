@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Minor refactors in credential resource wrapper to support
+  provisioning of COE on CSPs in job-engine.    
+
 ## [3.0.1] - 2020-03-27
 
 ### Changed
