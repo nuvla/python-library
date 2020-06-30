@@ -43,32 +43,40 @@ class Deployment(ResourceBase):
         return Deployment.subtype(deployment) == 'application_kubernetes'
 
     @staticmethod
-    def module(deployment: Union[dict, CimiResource]):
-        key = 'module'
+    def _get_attr(deployment: Union[dict, CimiResource], key):
         if isinstance(deployment, dict):
             return deployment[key]
         else:
             return deployment.data[key]
 
     @staticmethod
-    def module_content(deployment):
+    def module(deployment: Union[dict, CimiResource]):
+        key = 'module'
+        return Deployment._get_attr(deployment, key)
+
+    @staticmethod
+    def module_content(deployment: Union[dict, CimiResource]) -> dict:
         return Deployment.module(deployment)['content']
 
     @staticmethod
-    def owner(deployment):
-        return deployment['acl']['owners'][0]
+    def acl(deployment: Union[dict, CimiResource]) -> dict:
+        key = 'acl'
+        return Deployment._get_attr(deployment, key)
+
+    @staticmethod
+    def owner(deployment: Union[dict, CimiResource]):
+        key = 'owners'
+        return Deployment.acl(deployment)[key][0]
 
     @staticmethod
     def state(deployment: Union[dict, CimiResource]):
         key = 'state'
-        if isinstance(deployment, dict):
-            return deployment[key]
-        else:
-            return deployment.data[key]
+        return Deployment._get_attr(deployment, key)
 
     @staticmethod
-    def credential_id(deployment):
-        return deployment['parent']
+    def credential_id(deployment: Union[dict, CimiResource]):
+        key = 'parent'
+        return Deployment._get_attr(deployment, key)
 
     @staticmethod
     def compatibility(deployment):
@@ -375,8 +383,8 @@ class Deployment(ResourceBase):
             parameter['value'] = param_value
         return self.nuvla.add('deployment-parameter', parameter)
 
-    def _get_parameter(self, resource_id, name, node_id=None, select=None):
-        filters = f"parent='{resource_id}' and name='{name}'"
+    def _get_parameter(self, resource_id, param_name, node_id=None, select=None):
+        filters = f"parent='{resource_id}' and name='{param_name}'"
         if node_id:
             filters += " and node-id='{}'".format(node_id)
         res = self.nuvla.search("deployment-parameter", filter=filters, select=select)
@@ -384,14 +392,14 @@ class Deployment(ResourceBase):
             raise ResourceNotFound(f'Deployment parameter "{filters}" not found.')
         return res.resources[0]
 
-    def get_parameter(self, resource_id, node_id, name):
+    def get_parameter(self, resource_id, node_id, param_name):
         """Returns value of deployment `resource_id` parameter `name`. To get
         global level parameters (not belonging to a node), provide '' or None
         as `node_id`.
         Returns None if parameter is not found.
         """
         try:
-            param = self._get_parameter(resource_id, name, node_id)
+            param = self._get_parameter(resource_id, param_name, node_id)
         except ResourceNotFound:
             return None
         return param.data.get('value')
@@ -434,7 +442,7 @@ class Deployment(ResourceBase):
     def set_parameter(self, resource_id, node_id, name, value):
         if not isinstance(value, str):
             raise ValueError('Parameter value should be string.')
-        param = self._get_parameter(resource_id, node_id, name, select='id')
+        param = self._get_parameter(resource_id, name, node_id=node_id, select='id')
         return self.nuvla.edit(param.id, {'value': value})
 
     def set_parameter_ignoring_errors(self, resource_id, node_id, name, value):
@@ -443,13 +451,15 @@ class Deployment(ResourceBase):
         except Exception as _:
             pass
 
-    def set_parameter_create_if_needed(self, resource_id, user_id, param_name, param_value=None,
-                                       node_id=None, param_description=None):
+    def set_parameter_create_if_needed(self, resource_id, user_id, param_name,
+                                       node_id=None, param_value=None,
+                                       param_description=None):
         try:
             self.set_parameter(resource_id, node_id, param_name, param_value)
         except ResourceNotFound as _:
-            self.create_parameter(resource_id, user_id, param_name, param_value,
-                                  node_id, param_description)
+            self.create_parameter(resource_id, user_id, param_name,
+                                  param_value=param_value, node_id=node_id,
+                                  param_description=param_description)
 
     def set_infra_cred_id(self, resource_id, infra_cred_id):
         try:

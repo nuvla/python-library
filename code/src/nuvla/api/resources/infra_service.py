@@ -57,7 +57,7 @@ class InfraServiceK8s(InfraService):
         the `config_fn` is used.
         """
         kube = KubeConfig()
-        conf = kube.read_config(config_fn)
+        conf = kube.from_file(config_fn)
         if not context:
             context = conf.get('current-context')
         if not context:
