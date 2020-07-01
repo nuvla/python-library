@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.0.2] - 2020-07-01
+
 ### Changed
 
 - Minor refactors in credential resource wrapper to support
