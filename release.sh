@@ -32,6 +32,15 @@ create_tag() {
     fi
 }
 
+do_push_tag() {
+    if [[ "${PUSH_CHANGES}" == "true" ]]; then
+        echo "INFO: PUSHING tag ${TAG_VERSION}."
+        git push origin ${TAG_VERSION}
+    else
+        echo "INFO: not pushing tag."
+    fi
+}
+
 # update pom.xml files for tag and next development version
 tag_release() {
 
