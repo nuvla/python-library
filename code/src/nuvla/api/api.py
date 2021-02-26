@@ -58,6 +58,7 @@ import json
 import logging
 import os
 import stat
+import copy
 from typing import Optional
 
 import requests
@@ -499,6 +500,30 @@ class Api(object):
             return CimiResponse(
                 self._cimi_request('DELETE', resource_type,
                                    data={'filter': filter}, headers={'bulk': 'yes'}))
+
+    def operation_bulk(self, resource_type, filter, operation, data=None) -> CimiResponse:
+        """ Bulk delete CIMI resources of the given type (Collection).
+
+        :param      resource_type: Type of the resource (Collection name).
+        :type       resource_type: str
+
+        :param      Non-empty CIMI filter.
+        :type       filter: str
+
+        :param      data: The data to serialize into JSON
+        :type       data: dict
+
+        :return:    A CimiResponse object with the number of deleted records and other statistics.
+        :rtype:     CimiResponse
+        """
+        if not isinstance(filter, str) or len(filter) == 0:
+            raise NuvlaError("'filter' must be a non-empty string.")
+        else:
+            data_with_filter = copy.deepcopy(data)
+            data_with_filter['filter'] = filter
+            return CimiResponse(
+                self._cimi_request('PATCH', '{0}/{1}'.format(resource_type, operation),
+                                   json=data_with_filter, headers={'bulk': 'yes'}))
 
     def add(self, resource_type, data):
         """ Add a CIMI resource to the specified resource_type (Collection)
