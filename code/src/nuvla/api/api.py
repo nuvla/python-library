@@ -93,7 +93,7 @@ class NuvlaResourceOperationNotAvailable(KeyError):
 
 
 def _request_debug(method, endpoint, params=None, doc=None,
-                   data=None, headers: Optional[dict]=None):
+                   data=None, headers: Optional[dict] = None):
     # TODO: Use logging library.
     print('::: HTTP Request -> Response :::')
     print('>>> Request')
@@ -155,7 +155,9 @@ class SessionStore(requests.Session):
                 self.cookies.clear_expired_cookies()
 
     def need_to_login(self, accessed_url, status_code):
-        return self.reauthenticate and status_code in [401, 403] and accessed_url != self.session_base_url
+        return self.reauthenticate \
+               and status_code in [401, 403] \
+               and accessed_url != self.session_base_url
 
     def _request(self, *args, **kwargs):
         kwargs.setdefault('timeout', DEFAULT_TIMEOUT)
@@ -235,8 +237,9 @@ def to_login_params(creds):
 class Api(object):
     """ This class is a Python wrapper&helper of the native Nuvla REST API"""
 
-    def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True, cookie_file=None,
-                 reauthenticate=False, login_creds=None, authn_header=None, debug=False):
+    def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True,
+                 cookie_file=None, reauthenticate=False, login_creds=None, authn_header=None,
+                 debug=False):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
         :param insecure: Don't check server certificate or you are using a http connection.
@@ -513,7 +516,7 @@ class Api(object):
         :param      data: The data to serialize into JSON
         :type       data: dict
 
-        :return:    A CimiResponse object with the number of deleted records and other statistics.
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id', 'message' and 'location'
         :rtype:     CimiResponse
         """
         if not isinstance(filter, str) or len(filter) == 0:
@@ -587,7 +590,7 @@ class Api(object):
         :param      data: The data to serialize into JSON
         :type       data: dict
 
-        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id', 'message' and 'location'
         :rtype:     CimiResponse
         """
         operation_href = self._cimi_find_operation_href(resource, operation)
