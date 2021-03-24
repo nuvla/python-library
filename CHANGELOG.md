@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+ - Bulk operation support
+
 ## [3.0.2] - 2020-07-01
 
 ### Changed
@@ -32,7 +36,7 @@
 
 ## [2.1.1] - 2019-10-10
 
-### Changed
+### Added
 
  - Bulk delete support
 
