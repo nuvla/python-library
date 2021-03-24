@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.0.3] - 2021-03-24
+
 ### Added
 
  - Bulk operation support
