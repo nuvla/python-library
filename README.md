@@ -49,7 +49,7 @@ help(Api.search)
 
 ## Copyright
 
-Copyright &copy; 2019-2021, SixSq Sàrl
+Copyright &copy; 2019-2021, SixSq SA
 
 ## License
 
