@@ -36,11 +36,6 @@ jobs:
         run: |
           python3 -m pip install --upgrade -r code/requirements.txt
 
-      - name: Make internal packages part of nuvla-api distribution
-        run: |
-          export SITE_PACKAGES=$(dirname $(python3 -c 'import os; print(os.__file__)'))/site-packages
-          ln -sf $(pwd)/code/src/nuvla $SITE_PACKAGES
-
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
