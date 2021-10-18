@@ -26,7 +26,7 @@
     <pluginRepository>
       <id>clojars.org</id>
       <name>Clojars Repository</name>
-      <url>http://clojars.org/repo</url>
+      <url>https://clojars.org/repo</url>
     </pluginRepository>
   </pluginRepositories>
 

@@ -33,12 +33,12 @@ class AppBuilderK8sTest(TestCase):
         mb = AppBuilderK8s()
 
         mb.path('path')
-        self.assertEquals(mb.module['path'], 'path')
-        self.assertEquals(mb.module['parent-path'], '')
+        self.assertEqual(mb.module['path'], 'path')
+        self.assertEqual(mb.module['parent-path'], '')
 
         mb.path('path/sub-path')
-        self.assertEquals(mb.module['path'], 'path/sub-path')
-        self.assertEquals(mb.module['parent-path'], 'path')
+        self.assertEqual(mb.module['path'], 'path/sub-path')
+        self.assertEqual(mb.module['parent-path'], 'path')
 
     def test_minimal_build(self):
         mb = AppBuilderK8s()
