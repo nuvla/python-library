@@ -101,7 +101,7 @@
                 <argument>--junitxml=test-report.xml</argument>
               </arguments>
               <environmentVariables>
-                <PYTHONPATH>$(pwd)/src:$PYTHONPATH</PYTHONPATH>
+                <PYTHONPATH>${project.basedir}/src:$PYTHONPATH</PYTHONPATH>
               </environmentVariables>
             </configuration>
           </execution>
