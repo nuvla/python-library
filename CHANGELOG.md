@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Remove not portable and redundant call to setuptools.fund_packages.
+
 ## [3.0.3] - 2021-03-24
 
 ### Added
