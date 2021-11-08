@@ -3,5 +3,7 @@
 *.pyc
 *.egg-info/
 *.iml
+build/
+dist/
 target
 versions.sh

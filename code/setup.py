@@ -9,7 +9,6 @@ with open('requirements.txt') as f:
             install_requires.append(line)
 
 version = '${project.version}'
-packages = find_packages(where='src/')
 
 setup(
     name='nuvla-api',
