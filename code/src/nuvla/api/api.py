@@ -387,11 +387,12 @@ class Api(object):
         return resource_id
 
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
-        json_header = {'Accept': 'application/json'}
+        default_headers = {'Accept': 'application/json',
+                           'Accept-Encoding': 'gzip'}
         if headers:
-            headers.update(json_header)
+            headers.update(default_headers)
         else:
-            headers = json_header
+            headers = default_headers
         endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
             _request_debug(method, endpoint, params, json, data, headers)
