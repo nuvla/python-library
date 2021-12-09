@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Compression - New option to compress json sent to server
+  - Accept gzip encoding by default
   - Remove not portable and redundant call to setuptools.find_packages.
 
 ## [3.0.3] - 2021-03-24
