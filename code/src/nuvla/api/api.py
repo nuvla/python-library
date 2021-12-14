@@ -246,6 +246,7 @@ class Api(object):
         :param reauthenticate: Reauthenticate in case of requests failures with status code 401 or 403.
         :param login_creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
         :param authn_header: String containing list of claims for authentication header
+        :param compress: Compress json data sent to the server. Needs to be supported by the server.
         """
         self.endpoint = endpoint
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
