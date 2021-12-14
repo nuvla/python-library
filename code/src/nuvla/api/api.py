@@ -111,12 +111,7 @@ def _request_debug(method, endpoint, params=None, doc=None,
     if doc:
         print(jsonlib.dumps(doc, indent=2, sort_keys=True))
     if data:
-        dlen = len(data)
-        for k, v in data.items():
-            print('{0}={1}'.format(k, v))
-            dlen -= 1
-            if dlen > 0:
-                print('&')
+        print('data:', data)
     print('<<< Request')
 
 
@@ -390,24 +385,22 @@ class Api(object):
         return resource_id
 
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
-        default_headers = {'Accept': APPLICATION_JSON,
-                           'Accept-Encoding': 'gzip'}
+        _headers = {'Accept': APPLICATION_JSON,
+                    'Accept-Encoding': 'gzip'}
         if headers:
-            headers.update(default_headers)
-        else:
-            headers = default_headers
+            _headers.update(headers)
         endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
-        if self._debug and uri != CLOUD_ENTRY_POINT_ID:
-            _request_debug(method, endpoint, params, json, data, headers)
         if self._compress and json is not None:
-            headers['content-encoding'] = 'gzip'
+            _headers['Content-Encoding'] = 'gzip'
             data_to_compress = bytes(jsonlib.dumps(json), 'utf-8')
-            headers['content-type'] = APPLICATION_JSON
+            _headers['Content-Type'] = APPLICATION_JSON
             json = None
             data = gzip.compress(data_to_compress)
+        if self._debug and uri != CLOUD_ENTRY_POINT_ID:
+            _request_debug(method, endpoint, params, json, data, _headers)
 
         response = self.session.request(method, endpoint,
-                                        headers=headers,
+                                        headers=_headers,
                                         allow_redirects=False,
                                         params=params,
                                         json=json,
