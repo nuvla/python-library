@@ -45,7 +45,7 @@ do_push_tag() {
 tag_release() {
 
   # make the release tag
-  (git add . ; git commit -m "release ${TAG_VERSION}"; do_push; create_tag; do_push_tag)
+  (git add --update . ; git commit -m "release ${TAG_VERSION}"; do_push; create_tag; do_push_tag)
 
 }
 
@@ -53,7 +53,7 @@ tag_release() {
 update_to_snapshot() {
 
   # update to next development version
-  (git add . ; git commit -m "next development version"; do_push)
+  (git add --update . ; git commit -m "next development version"; do_push)
 }
 
 do_tag() {
