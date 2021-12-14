@@ -54,11 +54,12 @@
 
 """
 
-import json
+import json as jsonlib
 import logging
 import os
 import stat
 import copy
+import gzip
 from typing import Optional
 
 import requests
@@ -77,6 +78,7 @@ DEFAULT_COOKIE_FILE = os.path.expanduser('~/.nuvla/cookies.txt')
 HREF_SESSION_TMPL_PASSWORD = 'session-template/password'
 HREF_SESSION_TMPL_APIKEY = 'session-template/api-key'
 CLOUD_ENTRY_POINT_ID = 'cloud-entry-point'
+APPLICATION_JSON = 'application/json'
 
 
 class NuvlaError(Exception):
@@ -102,19 +104,14 @@ def _request_debug(method, endpoint, params=None, doc=None,
     print('Host: {}'.format(url_res.netloc))
     for k, v in headers.items():
         print('{0}: {1}'.format(k, v))
-    if any([params, json, data]):
+    if any([params, jsonlib, data]):
         print()
     if params:
         print('params:', params)
     if doc:
-        print(json.dumps(doc, indent=2, sort_keys=True))
+        print(jsonlib.dumps(doc, indent=2, sort_keys=True))
     if data:
-        dlen = len(data)
-        for k, v in data.items():
-            print('{0}={1}'.format(k, v))
-            dlen -= 1
-            if dlen > 0:
-                print('&')
+        print('data:', data)
     print('<<< Request')
 
 
@@ -189,8 +186,8 @@ class SessionStore(requests.Session):
         if self.login_params:
             method = 'POST'
             endpoint = self.session_base_url
-            headers = {'Content-Type': 'application/json',
-                       'Accept': 'application/json'}
+            headers = {'Content-Type': APPLICATION_JSON,
+                       'Accept': APPLICATION_JSON}
             json = {'template': login_params}
             if self._debug:
                 _request_debug(method, endpoint, doc=json, headers=headers)
@@ -239,7 +236,7 @@ class Api(object):
 
     def __init__(self, endpoint=DEFAULT_ENDPOINT, insecure=False, persist_cookie=True,
                  cookie_file=None, reauthenticate=False, login_creds=None, authn_header=None,
-                 debug=False):
+                 debug=False, compress=False):
         """
         :param endpoint: Nuvla endpoint (https://nuvla.io).
         :param insecure: Don't check server certificate or you are using a http connection.
@@ -249,6 +246,7 @@ class Api(object):
         :param reauthenticate: Reauthenticate in case of requests failures with status code 401 or 403.
         :param login_creds: {'username': '', 'password': ''} or {'key': '', 'secret': ''}
         :param authn_header: String containing list of claims for authentication header
+        :param compress: Compress json data sent to the server. Needs to be supported by the server.
         """
         self.endpoint = endpoint
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
@@ -267,6 +265,7 @@ class Api(object):
         self._username = None
         self._cimi_cloud_entry_point = None
         self._debug = debug
+        self._compress = compress
 
     def login(self, login_params):
         """Uses given 'login_params' to log into the Nuvla server. The
@@ -387,16 +386,22 @@ class Api(object):
         return resource_id
 
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
-        json_header = {'Accept': 'application/json'}
+        _headers = {'Accept': APPLICATION_JSON,
+                    'Accept-Encoding': 'gzip'}
         if headers:
-            headers.update(json_header)
-        else:
-            headers = json_header
+            _headers.update(headers)
         endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
+        if self._compress and json is not None:
+            _headers['Content-Encoding'] = 'gzip'
+            data_to_compress = bytes(jsonlib.dumps(json), 'utf-8')
+            _headers['Content-Type'] = APPLICATION_JSON
+            json = None
+            data = gzip.compress(data_to_compress)
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
-            _request_debug(method, endpoint, params, json, data, headers)
+            _request_debug(method, endpoint, params, json, data, _headers)
+
         response = self.session.request(method, endpoint,
-                                        headers=headers,
+                                        headers=_headers,
                                         allow_redirects=False,
                                         params=params,
                                         json=json,
