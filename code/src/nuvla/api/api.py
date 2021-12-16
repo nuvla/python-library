@@ -388,15 +388,35 @@ class Api(object):
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
         _headers = {'Accept': APPLICATION_JSON,
                     'Accept-Encoding': 'gzip'}
+
+        if json and data:
+            logger.warning('_cimi_request: Both "json" and "data" arguments provided. '
+                           'This is unsupported and can cause unexpected behaviour.')
+
+        if json:
+            _headers['Content-Type'] = APPLICATION_JSON
+
         if headers:
             _headers.update(headers)
+
         endpoint = '{0}/{1}/{2}'.format(self.endpoint, 'api', uri)
+
         if self._compress and json is not None:
-            _headers['Content-Encoding'] = 'gzip'
             data_to_compress = bytes(jsonlib.dumps(json), 'utf-8')
-            _headers['Content-Type'] = APPLICATION_JSON
-            json = None
-            data = gzip.compress(data_to_compress)
+            data_compressed = gzip.compress(data_to_compress)
+
+            compression_ratio = len(data_to_compress) / len(data_compressed)
+            logger.debug(f'_cimi_request: Request data compression ratio: {compression_ratio:.2f} '
+                        f'({len(data_to_compress)}/{len(data_compressed)} bytes)')
+
+            if compression_ratio > 1:
+                json = None
+                data = data_compressed
+                _headers['Content-Encoding'] = 'gzip'
+            else:
+                logger.debug('_cimi_request: Compressed data bigger than uncompressed data. '
+                            'Sending uncompressed data.')
+
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
             _request_debug(method, endpoint, params, json, data, _headers)
 
@@ -406,6 +426,7 @@ class Api(object):
                                         params=params,
                                         json=json,
                                         data=data)
+
         if self._debug and uri != CLOUD_ENTRY_POINT_ID:
             _response_debug(response)
         try:
