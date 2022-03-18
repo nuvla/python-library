@@ -15,7 +15,7 @@ setup(
     version=version,
     author="SixSq Sarl",
     author_email='support@sixsq.com',
-    url='http://sixsq.com/nuvla',
+    url='https://sixsq.com/nuvla',
     description="A wrapper to use Nuvla from Python programs.",
     keywords='nuvla devops api',
     package_dir={'': 'src'},

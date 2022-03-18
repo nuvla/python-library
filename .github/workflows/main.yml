@@ -1,6 +1,11 @@
 name: BUILD
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
 
 jobs:
 
@@ -28,13 +33,9 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install pytest
-        run: |
-          python3 -m pip install --upgrade pytest
-
       - name: Install test requirements
         run: |
-          python3 -m pip install --upgrade -r code/requirements.txt
+          python3 -m pip install --upgrade -r code/requirements-dev.txt
 
       - name: Extract branch name
         shell: bash
