@@ -3,7 +3,7 @@ from unittest.mock import patch
 from datetime import datetime, timezone, timedelta
 
 from nuvla.api.util.date import utcnow, today_start_time, today_end_time, \
-    parse_nuvla_date, nuvla_date, plus, minus, timestr2dtime
+    parse_nuvla_date, nuvla_date, plus, minus
 
 
 class TestDateUtil(unittest.TestCase):
@@ -22,12 +22,12 @@ class TestDateUtil(unittest.TestCase):
         self.assertEqual(datetime(2001, 12, 1, 23, 59, 59, 999999),
                          today_end_time())
 
-    def test_parse_cimi_date(self):
+    def test_parse_nuvla_date(self):
         self.assertEqual(
             datetime(2020, 5, 12, 15, 41, 37, 911000, tzinfo=timezone.utc),
             parse_nuvla_date('2020-05-12T15:41:37.911Z'))
 
-    def test_cimi_date(self):
+    def test_nuvla_date(self):
         date = datetime(2021, 5, 12, 15, 41, 37, 911002, tzinfo=timezone.utc)
         self.assertEqual('2021-05-12T15:41:37.911Z', nuvla_date(date))
         date = datetime(2021, 5, 12, 20, 41, 37, 911002,
@@ -45,11 +45,3 @@ class TestDateUtil(unittest.TestCase):
         self.assertEqual(
             datetime(2021, 5, 12, 15, 31, 36, 911002, tzinfo=timezone.utc),
             minus(date, timedelta(minutes=10, seconds=1)))
-
-    def test_timestr2dtime(self):
-        with self.assertRaises(ValueError):
-            timestr2dtime("")
-
-        time_str = '2022-03-18T00:00:00.123456'
-        self.assertEqual(datetime.fromisoformat(time_str).timestamp(),
-                         timestr2dtime(f'{time_str}789').timestamp())

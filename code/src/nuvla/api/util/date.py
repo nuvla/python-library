@@ -24,15 +24,6 @@ def today_end_time() -> datetime:
     return datetime.combine(utcnow(), time.max)
 
 
-def _time_rm_nanos(time_str):
-    time1, time2 = time_str.rsplit('.', 1)
-    return '.'.join([time1, time2[:6]])
-
-
-def timestr2dtime(time_str) -> datetime:
-    return datetime.fromisoformat(_time_rm_nanos(time_str))
-
-
 def plus(date: datetime, td: timedelta) -> datetime:
     return date + td
 
