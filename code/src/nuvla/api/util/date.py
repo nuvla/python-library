@@ -2,11 +2,11 @@
 from datetime import datetime, time, timezone, timedelta
 
 
-def parse_cimi_date(date: str) -> datetime:
+def parse_nuvla_date(date: str) -> datetime:
     return datetime.fromisoformat(date[:-1] + '+00:00')
 
 
-def cimi_date(date: datetime) -> str:
+def nuvla_date(date: datetime) -> str:
     return date.astimezone(timezone.utc) \
         .isoformat('T', timespec='milliseconds') \
         .replace('+00:00', 'Z')
