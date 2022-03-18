@@ -29,7 +29,7 @@ def _time_rm_nanos(time_str):
     return '.'.join([time1, time2[:6]])
 
 
-def timestr2dtime(time_str):
+def timestr2dtime(time_str) -> datetime:
     return datetime.fromisoformat(_time_rm_nanos(time_str))
 
 
