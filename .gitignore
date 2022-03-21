@@ -7,3 +7,5 @@ build/
 dist/
 target
 versions.sh
+code/test-report.xml
+
