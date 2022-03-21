@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.0.6] - 2022-03-21
+
 ### Added
 
 - Date - helper module around dates
