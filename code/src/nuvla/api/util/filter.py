@@ -2,8 +2,8 @@
 from typing import List, Optional
 
 
-def _filter_join(list_comparison: List[Optional[str]], join_logic: str = 'or') \
-        -> str:
+def __filter_join(list_comparison: List[Optional[str]],
+                  join_logic: str = 'or') -> str:
     list_comparison_filtered = [x for x in list_comparison if x]
     if list_comparison_filtered:
         separator = f' {join_logic} '
@@ -14,8 +14,8 @@ def _filter_join(list_comparison: List[Optional[str]], join_logic: str = 'or') \
 
 
 def filter_or(list_comparison: List[Optional[str]]) -> str:
-    return _filter_join(list_comparison, 'or')
+    return __filter_join(list_comparison, 'or')
 
 
 def filter_and(list_comparison: List[Optional[str]]) -> str:
-    return _filter_join(list_comparison, 'and')
+    return __filter_join(list_comparison, 'and')

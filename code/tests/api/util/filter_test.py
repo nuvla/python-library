@@ -1,6 +1,6 @@
 import unittest
 
-from nuvla.api.util.search import filter_or, filter_and
+from nuvla.api.util.filter import filter_or, filter_and
 
 
 class TestSearchUtil(unittest.TestCase):
