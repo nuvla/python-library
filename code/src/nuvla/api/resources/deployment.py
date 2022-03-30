@@ -18,6 +18,7 @@ class Deployment(ResourceBase):
 
     STATE_STARTED = 'STARTED'
     STATE_STOPPED = 'STOPPED'
+    STATE_STOPPING = 'STOPPING'
     STATE_ERROR = 'ERROR'
 
     resource = 'deployment'

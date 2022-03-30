@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.0.7] - 2022-03-30
+
 ### Added
 
 - Search - helper to build filters
