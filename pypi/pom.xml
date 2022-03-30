@@ -4,14 +4,14 @@
 
   <artifactId>python-library-pypi</artifactId>
   <name>python-library/pypi</name>
-  <version>3.0.7</version>
+  <version>3.0.8-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>http://sixsq.com/</url>
 
   <parent>
     <groupId>sixsq.nuvla.python-library</groupId>
     <artifactId>python-library</artifactId>
-    <version>3.0.7</version>
+    <version>3.0.8-SNAPSHOT</version>
   </parent>
 
   <dependencies>
