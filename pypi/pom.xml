@@ -66,24 +66,41 @@
             <version>1.6.0</version>
             <executions>
               <execution>
+                <id>python-build</id>
                 <phase>package</phase>
                 <goals>
                   <goal>exec</goal>
                 </goals>
+                <configuration>
+                  <executable>python3</executable>
+                  <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
+                  <arguments>
+                    <argument>-m</argument>
+                    <argument>build</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>pypi-upload</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>python3</executable>
+                  <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
+                  <arguments>
+                    <argument>-m</argument>
+                    <argument>twine</argument>
+                    <argument>upload</argument>
+                    <argument>--repository</argument>
+                    <argument>pypi</argument>
+                    <argument>dist/*</argument>
+                  </arguments>
+                </configuration>
               </execution>
             </executions>
-            <configuration>
-              <executable>python3</executable>
-              <workingDirectory>${project.build.directory}/pypi-pkg</workingDirectory>
-              <arguments>
-                <argument>-m</argument>
-                <argument>twine</argument>
-                <argument>upload</argument>
-                <argument>--repository</argument>
-                <argument>pypi</argument>
-                <argument>dist/*</argument>
-              </arguments>
-            </configuration>
+
           </plugin>
 
         </plugins>
