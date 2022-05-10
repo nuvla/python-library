@@ -8,6 +8,10 @@
 
 - Hook operation support
 
+### Changed
+
+- Release - push package with twine
+
 ## [3.0.7] - 2022-03-30
 
 ### Added
