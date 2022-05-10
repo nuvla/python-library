@@ -11,6 +11,7 @@
 ### Changed
 
 - Release - push package with twine
+- API - sanitise Nuvla endpoint (remove forward slashes)
 
 ## [3.0.7] - 2022-03-30
 

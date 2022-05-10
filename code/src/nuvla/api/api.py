@@ -132,7 +132,7 @@ class SessionStore(requests.Session):
     def __init__(self, endpoint, persist_cookie, cookie_file, reauthenticate,
                  login_params, authn_header=None, debug=False):
         super(SessionStore, self).__init__()
-        self.session_base_url = '{0}/api/session'.format(endpoint)
+        self.session_base_url = '{0}/api/session'.format(endpoint.strip('/'))
         self.reauthenticate = reauthenticate
         self.persist_cookie = persist_cookie
         self.login_params = login_params
@@ -248,7 +248,7 @@ class Api(object):
         :param authn_header: String containing list of claims for authentication header
         :param compress: Compress json data sent to the server. Needs to be supported by the server.
         """
-        self.endpoint = endpoint
+        self.endpoint = endpoint.strip('/')
         self.session = SessionStore(endpoint, persist_cookie, cookie_file, reauthenticate,
                                     login_params=to_login_params(login_creds),
                                     authn_header=authn_header,
