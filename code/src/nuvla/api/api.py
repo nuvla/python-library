@@ -622,3 +622,18 @@ class Api(object):
         operation_href = self._cimi_find_operation_href(resource, operation)
         resp_json = self._cimi_post(operation_href, json=data)
         return CimiResponse(resp_json)
+
+    def hook(self, operation, data=None) -> CimiResponse:
+        """ Execute a hook operation
+
+        :param      operation: Operation name
+        :type       operation: str
+
+        :param      data: The data to serialize into JSON
+        :type       data: dict
+
+        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id', 'message' and 'location'
+        :rtype:     CimiResponse
+        """
+        resp_json = self._cimi_post(f'hook/{operation}', json=data)
+        return CimiResponse(resp_json)

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [3.0.8] - 2022-05-10
+
+### Added
+
+- Hook operation support
+
 ## [3.0.7] - 2022-03-30
 
 ### Added
