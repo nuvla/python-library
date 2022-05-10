@@ -5,7 +5,7 @@
 
   <groupId>sixsq.nuvla.python-library</groupId>
   <artifactId>python-library</artifactId>
-  <version>3.0.8-SNAPSHOT</version>
+  <version>3.0.8</version>
   <packaging>pom</packaging>
   <name>python-library</name>
   <url>http://sixsq.com</url>
