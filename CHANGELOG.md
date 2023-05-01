@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released
+
 ## [3.0.8] - 2022-05-10
 
 ### Added
