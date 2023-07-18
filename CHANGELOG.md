@@ -4,6 +4,12 @@
 
 ## Released
 
+## [3.0.9] - 2023-07-18
+
+### Changed
+
+- Update PyYAML from 6.0 to 6.0.1
+
 ## [3.0.8] - 2022-05-10
 
 ### Added
@@ -102,5 +108,3 @@ Test of release process.
 ### Changed
 
 - release of nuvla-api 0.0.6
-
- 
