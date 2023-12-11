@@ -378,10 +378,7 @@ class Api(object):
         if resource_id is not None and resource_type is not None:
             raise TypeError("You can only specify 'resource_id' or 'resource_type', not both.")
 
-        if resource_type is not None:
-            resource_id = resource_type
-
-        return resource_id
+        return resource_type or resource_id
 
     def _cimi_request(self, method, uri, params=None, json=None, data=None, headers=None):
         _headers = {'Accept': APPLICATION_JSON,
@@ -492,8 +489,7 @@ class Api(object):
         :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
-        operation_href = resource.id
-        return CimiResource(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
+        return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs))
 
     def delete(self, resource_id) -> CimiResponse:
         """ Delete a CIMI resource by it's resource id
@@ -506,8 +502,7 @@ class Api(object):
 
         """
         resource = self.get(resource_id=resource_id)
-        operation_href = resource.id
-        return CimiResponse(self._cimi_delete(resource_id=operation_href))
+        return CimiResponse(self._cimi_delete(resource_id=resource.id))
 
     def delete_bulk(self, resource_type, filter, **kwargs) -> CimiResponse:
         """ Bulk delete CIMI resources of the given type (Collection).
@@ -565,8 +560,7 @@ class Api(object):
         :rtype:     CimiResponse
         """
         collection = self.search(resource_type=resource_type, last=0)
-        operation_href = f'{collection.id}'
-        return CimiResponse(self._cimi_post(resource_id=operation_href, json=data))
+        return CimiResponse(self._cimi_post(resource_id=collection.id, json=data))
 
     def search(self, resource_type, **kwargs) -> CimiCollection:
         """ Search for CIMI resources of the given type (Collection).
