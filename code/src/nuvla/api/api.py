@@ -263,7 +263,6 @@ class Api(object):
                 urllib3.disable_warnings(
                     urllib3.exceptions.InsecureRequestWarning)
         self._username = None
-        self._cimi_cloud_entry_point = None
         self._debug = debug
         self._compress = compress
 
@@ -351,16 +350,6 @@ class Api(object):
     def is_authenticated(self):
         return self.current_session() is not None
 
-    def _cimi_get_cloud_entry_point(self):
-        cep_json = self._cimi_get(CLOUD_ENTRY_POINT_ID)
-        return CloudEntryPoint(cep_json)
-
-    @property
-    def cloud_entry_point(self):
-        if self._cimi_cloud_entry_point is None:
-            self._cimi_cloud_entry_point = self._cimi_get_cloud_entry_point()
-        return self._cimi_cloud_entry_point
-
     @staticmethod
     def _cimi_find_operation_href(cimi_resource: CimiResource, operation: str):
         operation_href = cimi_resource.operations.get(operation, {}).get('href')
@@ -379,9 +368,7 @@ class Api(object):
             raise TypeError("You can only specify 'resource_id' or 'resource_type', not both.")
 
         if resource_type is not None:
-            resource_id = self.cloud_entry_point.collections.get(resource_type)
-            if resource_id is None:
-                raise KeyError("Resource type '{0}' not found.".format(resource_type))
+            resource_id = resource_type
 
         return resource_id
 
@@ -494,7 +481,7 @@ class Api(object):
         :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
-        operation_href = self._cimi_find_operation_href(resource, 'edit')
+        operation_href = resource.id
         return CimiResource(self._cimi_put(resource_id=operation_href, json=data, params=kwargs))
 
     def delete(self, resource_id) -> CimiResponse:
@@ -508,7 +495,7 @@ class Api(object):
 
         """
         resource = self.get(resource_id=resource_id)
-        operation_href = self._cimi_find_operation_href(resource, 'delete')
+        operation_href = resource.id
         return CimiResponse(self._cimi_delete(resource_id=operation_href))
 
     def delete_bulk(self, resource_type, filter, **kwargs) -> CimiResponse:
@@ -619,7 +606,7 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id', 'message' and 'location'
         :rtype:     CimiResponse
         """
-        operation_href = self._cimi_find_operation_href(resource, operation)
+        operation_href = f'{resource.id}/{operation}'
         resp_json = self._cimi_post(operation_href, json=data)
         return CimiResponse(resp_json)
 
