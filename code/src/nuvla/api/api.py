@@ -263,6 +263,7 @@ class Api(object):
                 urllib3.disable_warnings(
                     urllib3.exceptions.InsecureRequestWarning)
         self._username = None
+        self._cimi_cloud_entry_point = None
         self._debug = debug
         self._compress = compress
 
@@ -350,6 +351,15 @@ class Api(object):
     def is_authenticated(self):
         return self.current_session() is not None
 
+    def _cimi_get_cloud_entry_point(self):
+        cep_json = self._cimi_get(CLOUD_ENTRY_POINT_ID)
+        return CloudEntryPoint(cep_json)
+
+    @property
+    def cloud_entry_point(self):
+        if self._cimi_cloud_entry_point is None:
+            self._cimi_cloud_entry_point = self._cimi_get_cloud_entry_point()
+        return self._cimi_cloud_entry_point
     @staticmethod
     def _cimi_find_operation_href(cimi_resource: CimiResource, operation: str):
         operation_href = cimi_resource.operations.get(operation, {}).get('href')
