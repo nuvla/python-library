@@ -360,6 +360,7 @@ class Api(object):
         if self._cimi_cloud_entry_point is None:
             self._cimi_cloud_entry_point = self._cimi_get_cloud_entry_point()
         return self._cimi_cloud_entry_point
+
     @staticmethod
     def _cimi_find_operation_href(cimi_resource: CimiResource, operation: str):
         operation_href = cimi_resource.operations.get(operation, {}).get('href')
