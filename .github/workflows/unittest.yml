@@ -1,4 +1,4 @@
-name: "API Client UnitTests"
+name: "UnitTests"
 
 on:
   # add push to main trigger for sonarcloud scan
@@ -53,11 +53,11 @@ jobs:
           tox
 
 # Temporary disabled until we solve the issue with the sonarcloud token
-#      - name: SonarCloud Scan
-#        uses: SonarSource/sonarcloud-github-action@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN_NACHO }}
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
