@@ -9,3 +9,5 @@ target
 versions.sh
 code/test-report.xml
 
+.tox/
+

@@ -1,0 +1,57 @@
+name: "API Client UnitTests"
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
+          cache: 'pip'
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+          pip install poetry-plugin-export
+
+      - name: Export requirements
+        run: |
+          poetry export
+          -f requirements.txt
+          -o requirements.test.txt
+          --without-hashes
+          --without-urls
+          --with test
+
+      - name: Install TOX
+        run: |
+          pip install tox
+
+      - name: Run Unittests
+        id: unittests-run
+        run: |
+          tox
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: "| Unit Tests Results: Common Library |"
+          files: test-report.xml
