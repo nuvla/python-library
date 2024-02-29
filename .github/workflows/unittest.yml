@@ -3,6 +3,11 @@ name: "API Client UnitTests"
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - "nuvla/**"
+      - "tests/**"
+      - ".github/workflows/unittest.yml"
+
 
 jobs:
   run-tests:

@@ -9,9 +9,10 @@ permissions:
   pull-requests: write
 
 on:
-  push:
-    branches:
-      - tasklist-issue-3005
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - tasklist-issue-3005
 
 jobs:
   trigger-release:
