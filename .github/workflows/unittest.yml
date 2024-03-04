@@ -26,47 +26,24 @@ jobs:
       - name: Install python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
           cache: 'pip'
 
-      - name: Load cached Poetry installation
-        id: cached-poetry
-        uses: actions/cache@v4
-        with:
-          path: ~/.local  # the path depends on the OS
-          key: poetry-0  # increment to reset cache
 
-      - name: Setup Poetry
-        if: steps.cached-poetry.outputs.cache-hit != 'true'
-        uses: snok/install-poetry@v1.3.4
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Install test dependencies
+      - name: Install TOX and jq
         run: |
-          poetry install --with=tests
+          pip install tox
+          sudo apt-get update
+          sudo apt-get install -y jq
 
-      - name: Run unittests
-        run: >
-          poetry run pytest 
-          --junitxml=test-report.xml 
-          --cov=nuvla 
-          --cov-report=xml 
-          --cov-report term 
-          --cov-config=.coveragerc
-          --cov-branch
-
-#      - name: Install TOX and jq
-#        run: |
-#          pip install tox
-#          sudo apt-get update
-#          sudo apt-get install -y jq
-#
-#      - name: Run Unittests
-#        id: unittests-run
-#        run: |
-#          tox
+      - name: Run Unittests
+        id: unittests-run
+        run: |
+          tox
 
 # Temporary disabled until we solve the issue with the sonarcloud token
       - name: SonarCloud Scan
