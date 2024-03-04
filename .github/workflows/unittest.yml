@@ -20,40 +20,39 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
     steps:
       - uses: actions/checkout@v4
 
       - name: Install python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
           cache: 'pip'
 
 
       - name: Install TOX and jq
         run: |
-          pip install tox tox-gh
+          pip install tox
           sudo apt-get update
           sudo apt-get install -y jq
 
       - name: Run Unittests
         id: unittests-run
         run: |
-          tox
+          tox -vvv
 
 # Temporary disabled until we solve the issue with the sonarcloud token
       - name: SonarCloud Scan
-        if: ${{ matrix.python-version }} == "3.11"
         uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 
       - name: SonarQube Quality Gate check
-        if: ${{ matrix.python-version }} == "3.11"
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         # Force to fail step after specific time
         timeout-minutes: 5
