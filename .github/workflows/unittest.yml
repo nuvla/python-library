@@ -3,13 +3,10 @@ name: "UnitTests"
 on:
   # add push to main trigger for sonarcloud scan
   push:
-    paths:
+    branches:
       - "main"
       - "master"
-#      - "nuvla/**"
-#      - "tests/**"
-#      - ".github/workflows/unittest.yml"
-#      - "sonar-project.properties"
+
   workflow_dispatch:
   pull_request:
     paths:
