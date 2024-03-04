@@ -57,13 +57,6 @@ jobs:
           --cov-config=.coveragerc
           --cov-branch
 
-      - name: Save coverage and tests
-        uses: actions/upload-artifact@v4
-        with:
-          name: results
-          path: |
-            coverage.xml
-            test-report.xml
 #      - name: Install TOX and jq
 #        run: |
 #          pip install tox
