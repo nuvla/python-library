@@ -26,13 +26,8 @@ jobs:
       - name: Install python
         uses: actions/setup-python@v5
         with:
-          python-version: |
-            3.8
-            3.9
-            3.10
-            3.11
+          python-version: 3.11
           cache: 'pip'
-
 
       - name: Install TOX and jq
         run: |
@@ -43,7 +38,7 @@ jobs:
       - name: Run Unittests
         id: unittests-run
         run: |
-          tox -vvv
+          tox
 
 # Temporary disabled until we solve the issue with the sonarcloud token
       - name: SonarCloud Scan
