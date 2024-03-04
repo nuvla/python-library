@@ -3,6 +3,10 @@ name: "UnitTests"
 on:
   # add push to main trigger for sonarcloud scan
   push:
+    paths:
+      - "nuvla/**"
+      - "tests/**"
+      - ".github/workflows/unittest.yml"
   workflow_dispatch:
 #  pull_request:
 #    paths:
@@ -37,16 +41,28 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Install TOX and jq
+      - name: Install test dependencies
         run: |
-          pip install tox
-          sudo apt-get update
-          sudo apt-get install -y jq
+          poetry install --with=tests
 
-      - name: Run Unittests
-        id: unittests-run
-        run: |
-          tox
+      - name: Run unittests
+        run: >
+          poetry run pytest 
+          --junitxml=test-report.xml 
+          --cov=nuvla 
+          --cov-report=xml 
+          --cov-report term 
+          --cov-config=.coveragerc
+#      - name: Install TOX and jq
+#        run: |
+#          pip install tox
+#          sudo apt-get update
+#          sudo apt-get install -y jq
+#
+#      - name: Run Unittests
+#        id: unittests-run
+#        run: |
+#          tox
 
 # Temporary disabled until we solve the issue with the sonarcloud token
       - name: SonarCloud Scan
