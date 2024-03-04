@@ -22,26 +22,22 @@ jobs:
       - name: Install python
         uses: actions/setup-python@v5
         with:
-          python-version: |
-            3.8
-            3.9
-            3.10
-            3.11
+          python-version: 3.11
           cache: 'pip'
 
-      - name: Install Poetry
-        run: |
-          pip install poetry
-          pip install poetry-plugin-export
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local  # the path depends on the OS
+          key: poetry-0  # increment to reset cache
 
-      - name: Export requirements
-        run: >
-          poetry export
-          -f requirements.txt
-          -o requirements.test.txt
-          --without-hashes
-          --without-urls
-          --with test
+      - name: Setup Poetry
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        uses: snok/install-poetry@v1.3.4
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
       - name: Install TOX and jq
         run: |
