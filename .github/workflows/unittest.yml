@@ -53,6 +53,8 @@ jobs:
           --cov-report=xml 
           --cov-report term 
           --cov-config=.coveragerc
+          --cov-branch
+
 #      - name: Install TOX and jq
 #        run: |
 #          pip install tox
