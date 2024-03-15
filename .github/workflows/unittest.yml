@@ -28,8 +28,8 @@ jobs:
           echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
       - id: set-latest
         run: |
-          versions_array=(${{ fromJSON(steps.set-versions.outputs.versions) }})
-          latest=${versions_array[-1]}
+          sudo apt-get install -y jq
+          latest=$(echo '${{ fromJSON(steps.set-versions.outputs.versions) }}' | jq '.[-1]')
           echo "latest=$latest"
           echo "latest=$latest" >> $GITHUB_OUTPUT
 
