@@ -17,11 +17,21 @@ on:
 
 
 jobs:
+  setup-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.set-versions.outputs.versions }}
+    steps:
+      - id: set-versions
+        run: |
+          echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
+
   run-tests:
+    needs: setup-matrix
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ${{ fromJSON(${{ vars.SUPPORTED_PYTHON_VERSIONS }}) }}
+        python_version: ${{ fromJSON(needs.setup-matrix.outputs.versions) }}
     steps:
       - uses: actions/checkout@v4
 
