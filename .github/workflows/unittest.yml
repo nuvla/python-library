@@ -28,8 +28,8 @@ jobs:
           echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
       - id: set-latest
         run: |
-          echo "latest=${{ fromJSON(needs.set-versions.outputs.versions)[-1] }}"
-          echo "latest=${{ fromJSON(needs.set-versions.outputs.versions)[-1] }}" >> $GITHUB_OUTPUT
+          echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}"
+          echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}" >> $GITHUB_OUTPUT
 
   run-tests:
     needs: setup-matrix
