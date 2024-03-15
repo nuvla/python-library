@@ -28,6 +28,7 @@ jobs:
           echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
       - id: set-latest
         run: |
+          echo "fromJSON(steps.set-versions.outputs.versions)"
           echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}"
           echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}" >> $GITHUB_OUTPUT
 
