@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ["3.9", "3.10", "3.11"]
+        python_version: ${{ fromJSON(${{ vars.SUPPORTED_PYTHON_VERSIONS }}) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,14 +66,14 @@ jobs:
 
 
       - name: SonarCloud Scan
-        if: matrix.python_version == '3.11'
+        if: matrix.python_version == ${{ vars.LATEST_PYTHON_VERSION }}
         uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 
       - name: SonarQube Quality Gate check
-        if: matrix.python_version == '3.11'
+        if: matrix.python_version == ${{ vars.LATEST_PYTHON_VERSION }}
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         # Force to fail step after specific time
         timeout-minutes: 5
