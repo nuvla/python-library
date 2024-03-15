@@ -29,10 +29,7 @@ jobs:
       - id: set-latest
         run: |
           sudo apt-get install -y jq
-          echo '${{ vars.SUPPORTED_PYTHON_VERSIONS }}'
-          echo '${{ fromJSON(steps.set-versions.outputs.versions) }}'
           latest=$(echo '${{ fromJSON(vars.SUPPORTED_PYTHON_VERSIONS) }}' | jq '.[-1]')
-          echo "latest=$latest"
           echo "latest=$latest" >> $GITHUB_OUTPUT
 
   run-tests:
@@ -91,8 +88,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 
+      - name: Print outputs
+        run: |
+          echo "Latest: ${{ needs.setup-matrix.outputs.latest }}"
+          echo "Python Version: ${{ matrix.python_version }}"
+          echo "Python Versions: ${{ fromJSON(needs.setup-matrix.outputs.versions) }}"
+
       - name: SonarQube Quality Gate check
-        if: matrix.python_version == '3.11'
+        if: matrix.python_version == needs.setup-matrix.outputs.latest
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         # Force to fail step after specific time
         timeout-minutes: 5
