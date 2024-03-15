@@ -26,17 +26,6 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: 'pyproject.toml'
-
-      - name: Print python version
-        run: python --version
-
       - id: release
         uses: google-github-actions/release-please-action@v4
         with:
