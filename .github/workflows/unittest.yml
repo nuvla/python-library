@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.set-versions.outputs.versions }}
-      latest: ${{ steps.set-versions.outputs.latest }}
+      latest: ${{ steps.set-latest.outputs.latest }}
     steps:
       - id: set-versions
         run: |
