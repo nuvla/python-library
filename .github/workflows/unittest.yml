@@ -29,7 +29,8 @@ jobs:
       - id: set-latest
         run: |
           sudo apt-get install -y jq
-          latest=$(echo '${{ fromJSON(steps.set-versions.outputs.versions) }}' | jq '.[-1]')
+          latest=$(echo '${{ vars.SUPPORTED_PYTHON_VERSIONS }}' | jq '.[-1]')
+          echo '${{ vars.SUPPORTED_PYTHON_VERSIONS }}'
           echo "latest=$latest"
           echo "latest=$latest" >> $GITHUB_OUTPUT
 
