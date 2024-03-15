@@ -28,9 +28,10 @@ jobs:
           echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
       - id: set-latest
         run: |
-          echo "${{ fromJSON(steps.set-versions.outputs.versions) }}"
-          echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}"
-          echo "latest=${{ fromJSON(steps.set-versions.outputs.versions)[-1] }}" >> $GITHUB_OUTPUT
+          versions_array=(${{ fromJSON(steps.set-versions.outputs.versions) }})
+          latest=${versions_array[-1]}
+          echo "latest=$latest"
+          echo "latest=$latest" >> $GITHUB_OUTPUT
 
   run-tests:
     needs: setup-matrix
@@ -82,14 +83,14 @@ jobs:
 
 
       - name: SonarCloud Scan
-        if: matrix.python_version == '${{ vars.LATEST_PYTHON_VERSION }}'
+        if: matrix.python_version == '3.11'
         uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 
       - name: SonarQube Quality Gate check
-        if: matrix.python_version == '${{ vars.LATEST_PYTHON_VERSION }}'
+        if: matrix.python_version == '3.11'
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
         # Force to fail step after specific time
         timeout-minutes: 5
