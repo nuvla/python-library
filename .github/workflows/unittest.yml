@@ -1,0 +1,109 @@
+name: "UnitTests"
+
+on:
+  # add push to main trigger for sonarcloud scan
+  push:
+    branches:
+      - "main"
+      - "master"
+
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "nuvla/**"
+      - "tests/**"
+      - ".github/workflows/unittest.yml"
+
+
+
+jobs:
+  setup-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.set-versions.outputs.versions }}
+      latest: ${{ steps.set-latest.outputs.latest }}
+    steps:
+      - id: set-versions
+        run: |
+          echo "versions=${{ vars.SUPPORTED_PYTHON_VERSIONS }}" >> $GITHUB_OUTPUT
+      - id: set-latest
+        run: |
+          sudo apt-get install -y jq
+          latest=$(echo '${{ fromJSON(vars.SUPPORTED_PYTHON_VERSIONS) }}' | jq '.[-1]')
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+
+  run-tests:
+    needs: setup-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ${{ fromJSON(needs.setup-matrix.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+          cache: 'pip'
+
+      - name: Load cached Poetry installation
+        id: cached-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local  # the path depends on the OS
+          key: poetry-${{ matrix.python_version }}  # increment to reset cache
+
+      - name: Setup Poetry
+        uses: snok/install-poetry@v1
+        if: steps.cached-poetry.outputs.cache-hit != 'true'
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: |
+          poetry install --with=tests
+
+      - name: Run Unittests
+        run: >
+          poetry run pytest 
+          --junitxml=test-report.xml 
+          --cov=nuvla 
+          --cov-report=xml 
+          --cov-report term 
+          --cov-config=.coveragerc 
+          --cov-branch
+
+      - name: Install jq (For Quality Gate)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: SonarCloud Scan
+        if: matrix.python_version == needs.setup-matrix.outputs.latest
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+        with:
+          args: >
+            -Dsonar.python.version=${{ matrix.python_version }}
+
+
+      - name: SonarQube Quality Gate check
+        if: matrix.python_version == needs.setup-matrix.outputs.latest
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
+        # Force to fail step after specific time
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: .scannerwork/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: "| UnitTest for Py${{ matrix.python_version }} |"
+          files: test-report.xml

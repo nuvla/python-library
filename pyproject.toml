@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "nuvla-api"
+version = "3.0.9"
+description = "Nuvla APIServer python client library"
+license = "Apache-2.0"
+authors = ["SixSq SA <support@sixsq.com>"]
+maintainers = ["Ignacio Penas <nacho@sixsq.com>"]
+readme = "README.md"
+repository = "https://github.com/nuvla/python-library"
+classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: Apache Software License",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development"]
+packages = [{include = "nuvla"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+requests = "^2.31.0"
+pyyaml = "^6.0.1"
+
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^8.0.2"
+coverage = "^7.4.3"
+pytest-cov = "^4.1.0"
+tox = "^4.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
