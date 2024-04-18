@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nuvla-api"
-version = "3.0.9"
+version = "4.0.0"
 description = "Nuvla APIServer python client library"
 license = "Apache-2.0"
 authors = ["SixSq SA <support@sixsq.com>"]

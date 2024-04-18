@@ -4,6 +4,18 @@
 
 ## Released
 
+## [4.0.0](https://github.com/nuvla/python-library/compare/3.0.9...4.0.0) (2024-04-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* Trigger major version release
+
+### Features
+
+* Remove build CI maven (in favor of Poetry) and synchronise release workflow ([#41](https://github.com/nuvla/python-library/issues/41)) ([7e50d70](https://github.com/nuvla/python-library/commit/7e50d70077779786e40c888d15c069146ffb8c9c))
+* Trigger major version release ([88285e3](https://github.com/nuvla/python-library/commit/88285e3cbc4102cc090f031e18723ea7cc58549b))
+
 ## [3.0.9] - 2023-07-18
 
 ### Changed
