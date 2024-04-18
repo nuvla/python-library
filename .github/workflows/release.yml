@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local  # the path depends on the OS
-          key: poetry-0  # increment to reset cache
+          key: poetry-0
 
       - name: Setup Poetry
         uses: snok/install-poetry@v1
