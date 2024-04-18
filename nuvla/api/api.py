@@ -629,3 +629,4 @@ class Api(object):
         """
         resp_json = self._cimi_post(f'hook/{operation}', json=data)
         return CimiResponse(resp_json)
+
