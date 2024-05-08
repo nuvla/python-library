@@ -76,6 +76,7 @@ jobs:
           --cov-branch
 
       - name: Install jq (For Quality Gate)
+        if: matrix.python_version == needs.setup-matrix.outputs.latest
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
