@@ -488,8 +488,7 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
         :rtype:     CimiResource
         """
-        resource = self.get(resource_id=resource_id)
-        return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs))
+        return CimiResource(self._cimi_put(resource_id=resource_id, json=data, params=kwargs))
 
     def delete(self, resource_id) -> CimiResponse:
         """ Delete a CIMI resource by it's resource id
