@@ -1,6 +1,6 @@
 # Nuvla Python Client Library
 
-[![Build Status](https://github.com/nuvla/python-library/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/nuvla/python-library/actions/workflows/release.yml)
+[![Build Status](https://github.com/nuvla/python-library/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/nuvla/python-library/actions/workflows/release.yml)
 
 Nuvla client library to facilitate interaction with the Nuvla REST API
 via the Python language.

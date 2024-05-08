@@ -17,7 +17,7 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  .. code-block:: Bash
 
-   $ pip install 'https://github.com/nuvla/python-api/archive/master.zip'
+   $ pip install 'https://github.com/nuvla/python-api/archive/main.zip'
 
 
  Usage
