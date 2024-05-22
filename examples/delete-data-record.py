@@ -65,7 +65,6 @@ records = dr_api.id_by_name('African Lion', filter=f"tags='lion'")
 print(f'Found records\n', records)
 
 for record in records:
-    print(f'record\n', record)
     print(f'deleted data record:', dr_api.delete(record))
 
 animals = ["lion", "elephant", "giraffe", "hyena", "rhino", "zebra"]
