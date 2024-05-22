@@ -41,6 +41,14 @@ class User(ResourceBase):
         self.nuvla.logout()
 
     def switch_user_group(self, session_string, group_id):
+        '''
+        Switches the user group.
+        :param session_string: session string
+        :param group_id: group id
+        :return: None
+        '''
         cimi_resource = self.nuvla.get(session_string)
+        if not group_id.startswith('group/'):
+            group_id = f'group/{group_id}'
         data = {'claim': group_id}
         self.nuvla.operation(cimi_resource, 'switch-group', data)
