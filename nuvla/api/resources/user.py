@@ -39,3 +39,7 @@ class User(ResourceBase):
 
     def logout(self):
         self.nuvla.logout()
+
+    def switch_user_group(self, session_id, group_id):
+        data = {'claim': group_id}
+        return self.nuvla.operation(session_id, 'switch-group', data)
