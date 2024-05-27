@@ -1,9 +1,9 @@
 
+from typing import Tuple
 from requests.exceptions import HTTPError
 
 from .base import ResourceBase
-from ..api import NuvlaError
-
+from ..api import NuvlaError, Api
 
 class User(ResourceBase):
     resource = 'user'
@@ -16,9 +16,8 @@ class User(ResourceBase):
         :return: string
         """
         return self.add(template)
-
-    def login_password(self, username, password):
-        response = self.nuvla.login_password(username, password)
+    
+    def _handle_login_response(self, response) -> str:
         try:
             response.raise_for_status()
         except HTTPError as e:
@@ -35,20 +34,63 @@ class User(ResourceBase):
                     message = str(e)
             raise NuvlaError(message, response)
 
-        return response.json().get('resource-id')
+        new_nuvla = self.nuvla
+
+        return new_nuvla
+    
+    def login(self, username_or_key: str, password_or_secret: str) -> Tuple[Api, bool]:
+        '''
+        Logs in the user.
+        :param username_or_key: username or API key
+        :param password_or_secret: password or secret
+        :return: Api, bool
+        If the user is logged in using API key, the second return value is False.
+        If the user is logged in using password, the second return value is True.
+        '''
+        if username_or_key.startswith('credential/'):
+            allow_switch_groups = False
+            response = self.nuvla.login_apikey(username_or_key, password_or_secret)
+        else:
+            response = self.nuvla.login_password(username_or_key, password_or_secret)
+            allow_switch_groups = True
+
+        return self._handle_login_response(response), allow_switch_groups
+
+    def login_password(self, username: str, password: str) -> Api:
+        '''
+        Logs in the user using password.
+        :param username: username
+        :param password: password
+        :return: Api
+        '''
+        response = self.nuvla.login_password(username, password)
+        
+        return self._handle_login_response(response)
+
+    def login_api(self, api_key: str, secret: str) -> Api:
+        '''
+        Logs in the user using API key.
+        :param api_key: API key
+        :param secret: secret
+        :return: Api
+        '''
+        response = self.nuvla.login_apikey(api_key, secret)
+
+        return self._handle_login_response(response)
 
     def logout(self):
         self.nuvla.logout()
 
-    def switch_user_group(self, session_string, group_id):
-        '''
+    def switch_user_group(self, group_id: str) -> Api:
+        """
         Switches the user group.
-        :param session_string: session string
-        :param group_id: group id
-        :return: None
-        '''
-        cimi_resource = self.nuvla.get(session_string)
-        if not group_id.startswith('group/'):
-            group_id = f'group/{group_id}'
+        :param group_id: group id (group/<group name>)
+        :return: Api
+        """
+        cimi_collection = self.nuvla.search('session')
+        if not cimi_collection.resources:
+            raise Exception('No session found.')
+        session = cimi_collection.resources[0]
         data = {'claim': group_id}
-        self.nuvla.operation(cimi_resource, 'switch-group', data)
+        self.nuvla.operation(session, 'switch-group', data)
+        return self.nuvla

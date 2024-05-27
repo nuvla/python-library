@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
-# import sys
-# sys.path.insert(0,'/Users/jwhite/Code/python-library/nuvla/api/resources')
-# from user import User
+import random
+from utils import nuvla_conf_user_pass
 from nuvla.api import Api as Nuvla
 from nuvla.api.resources.data import DataRecord
 from nuvla.api.resources.user import User
-from utils import nuvla_conf_user_pass
-
-import random
-
 
 # Set to True to print Nuvla request / response messages to stdout.
 debug = False
@@ -24,22 +19,24 @@ nuvla = Nuvla(debug=debug)
 # Login to Nuvla.
 #
 user_api = User(nuvla)
-session_string = user_api.login_password(username, password)
-print('session_string:', session_string)
-if 'active_claim' in user_api.get(session_string):
-    print('Current group:', user_api.get(session_string)['active-claim'])
-else:
-    print('There is no active claim')
 
-new_group = 'group/sixsq-devs'
-print("\nSwitch to new group  ->  ", new_group)
-user_api.switch_user_group(session_string, new_group)
-print('Switched group to:', user_api.get(session_string)['active-claim'],'\n')
+# Login to Nuvla.
+nuvla, switch = user_api.login(username, password)
+
+print(f'nuvla current session ID: {nuvla.current_session()}')
+
+if switch:
+    new_group_name = 'extract'
+    new_group = 'group/' + new_group_name
+    print("\nSwitch to new group  ->  ", new_group)
+    nuvla = user_api.switch_user_group(new_group)
+    print('Switched group to:', user_api.get(nuvla.current_session())['active-claim'],'\n')
+else:
+    print('No group switch allowed. API key login used')
 
 # Data record API object.
 #
 dr_api = DataRecord(nuvla)
-
 
 #
 # Add minimal data record.
