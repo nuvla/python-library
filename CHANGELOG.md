@@ -4,6 +4,13 @@
 
 ## Released
 
+## [4.0.1](https://github.com/nuvla/python-library/compare/4.0.0...4.0.1) (2024-05-08)
+
+
+### Bug Fixes
+
+* remove redundant ID retrieval from edit operation ([#43](https://github.com/nuvla/python-library/issues/43)) ([b1b7ad1](https://github.com/nuvla/python-library/commit/b1b7ad10847fc43b1888337a991aa3a2a1df7c40))
+
 ## [4.0.0](https://github.com/nuvla/python-library/compare/3.0.9...4.0.0) (2024-04-18)
 
 

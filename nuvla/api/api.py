@@ -17,7 +17,7 @@
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  .. code-block:: Bash
 
-   $ pip install 'https://github.com/nuvla/python-api/archive/master.zip'
+   $ pip install 'https://github.com/nuvla/python-api/archive/main.zip'
 
 
  Usage
@@ -60,7 +60,7 @@ import os
 import stat
 import copy
 import gzip
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 from requests.cookies import MockRequest
@@ -335,7 +335,7 @@ class Api(object):
         self.session.login_params = None
         self._username = None
 
-    def current_session(self):
+    def current_session(self) -> Union[None, str]:
         """Returns current user session or None.
 
         :return: Current user session.
@@ -348,7 +348,7 @@ class Api(object):
         else:
             return None
 
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         return self.current_session() is not None
 
     def _cimi_get_cloud_entry_point(self):
@@ -488,8 +488,7 @@ class Api(object):
         :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
         :rtype:     CimiResource
         """
-        resource = self.get(resource_id=resource_id)
-        return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs))
+        return CimiResource(self._cimi_put(resource_id=resource_id, json=data, params=kwargs))
 
     def delete(self, resource_id) -> CimiResponse:
         """ Delete a CIMI resource by it's resource id
