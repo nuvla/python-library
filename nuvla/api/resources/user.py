@@ -1,5 +1,4 @@
-from copy import deepcopy
-from typing import Tuple
+from copy import copy
 
 from requests import Response
 from requests.exceptions import HTTPError
@@ -60,11 +59,9 @@ class User(ResourceBase):
         """
 
         if username_or_key.startswith('credential/'):
-            self.login_apikey(username_or_key, password_or_secret)
+            return self.login_apikey(username_or_key, password_or_secret)
         else:
-            self.login_password(username_or_key, password_or_secret)
-
-        return deepcopy(self.nuvla)
+            return self.login_password(username_or_key, password_or_secret)
 
     def login_password(self, username: str, password: str) -> Api:
         """
@@ -79,7 +76,7 @@ class User(ResourceBase):
 
         self._can_switch_groups = True
 
-        return deepcopy(self.nuvla)
+        return copy(self.nuvla)
 
     def login_apikey(self, api_key: str, secret: str) -> Api:
         """
@@ -94,7 +91,7 @@ class User(ResourceBase):
 
         self._can_switch_groups = False
 
-        return deepcopy(self.nuvla)
+        return copy(self.nuvla)
 
     def logout(self):
         self.nuvla.logout()
