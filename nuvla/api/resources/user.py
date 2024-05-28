@@ -133,4 +133,4 @@ class User(ResourceBase):
         session = cimi_collection.resources[0]
         data = {'claim': group_id}
         self.nuvla.operation(session, 'switch-group', data)
-        return deepcopy(self.nuvla)
+        return copy(self.nuvla)
