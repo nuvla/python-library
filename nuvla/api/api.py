@@ -60,7 +60,7 @@ import os
 import stat
 import copy
 import gzip
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 from requests.cookies import MockRequest
@@ -335,7 +335,7 @@ class Api(object):
         self.session.login_params = None
         self._username = None
 
-    def current_session(self):
+    def current_session(self) -> Union[None, str]:
         """Returns current user session or None.
 
         :return: Current user session.
@@ -348,7 +348,7 @@ class Api(object):
         else:
             return None
 
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         return self.current_session() is not None
 
     def _cimi_get_cloud_entry_point(self):

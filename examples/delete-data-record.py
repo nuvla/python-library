@@ -21,16 +21,16 @@ nuvla = Nuvla(debug=debug)
 user_api = User(nuvla)
 
 # Login to Nuvla.
-nuvla, switch = user_api.login(username, password)
+nuvla = user_api.login(username, password)
 
-print(f'nuvla current session ID: {nuvla.current_session()}')
+print(f'nuvla current session ID: {user_api.current_session_id()}')
 
-if switch:
+if user_api.can_switch_groups():
     new_group_name = 'extract'
     new_group = 'group/' + new_group_name
-    print("\nSwitch to new group  ->  ", new_group)
-    nuvla = user_api.switch_user_group(new_group)
-    print('Switched group to:', user_api.get(nuvla.current_session())['active-claim'],'\n')
+    print('Switch to new group  ->  ', new_group)
+    nuvla = user_api.switch_group(new_group)
+    print('Switched group to:', user_api.current_session()['active-claim'])
 else:
     print('No group switch allowed. API key login used')
 
