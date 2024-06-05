@@ -7,28 +7,6 @@ from .base import ResourceBase
 from ..api import NuvlaError, Api
 
 
-def handle_HTTPErrorException(ex: HTTPError, response: Response):
-    try:
-        json_msg = ex.response.json()
-        message = json_msg.get('message')
-        if message is None:
-            error = json_msg.get('error')
-            message = error.get('code') + ' - ' + error.get('reason')
-    except:
-        try:
-            message = ex.response.text
-        except:
-            message = str(ex)
-    raise NuvlaError(message, response)
-
-
-def handle_response(response: Response):
-    try:
-        response.raise_for_status()
-    except HTTPError as ex:
-        handle_HTTPErrorException(ex, response)
-
-
 def handle_HTTPErrorException(e: HTTPError, response: Response):
     try:
         json_msg = e.response.json()
