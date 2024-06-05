@@ -1,11 +1,14 @@
 
 import os
 import re
+from typing import List, Tuple
+
 from ..api import NuvlaError
 from .base import ResourceBase
 
 
 APP_TYPE_K8S = 'application_kubernetes'
+APP_TYPE_HELM = 'application_helm'
 APP_TYPE_DOCKER = 'application'
 
 
@@ -141,9 +144,10 @@ class AppBuilder(ModuleBuilder):
     def __init__(self, base=None):
         super().__init__(base)
         self.module_requires.extend(self.module_requires_app)
-        if not self.script_key:
-            raise Exception('')
-        self.content_requires.append(self.script_key)
+        if self.type != APP_TYPE_HELM:
+            if not self.script_key:
+                raise ValueError(f'Manifest key name required for {self.type}')
+            self.content_requires.append(self.script_key)
 
     def logo_url(self, url):
         self.module['logo-url'] = url
@@ -166,8 +170,9 @@ class AppBuilder(ModuleBuilder):
         :param description:
         :return:
         """
-        env_var = {'name': name, 'value': value,
-                   'required': required, 'description': description}
+        env_var = {'name': name, 'value': value, 'required': required}
+        if description:
+            env_var['description'] = description
         self.module.setdefault('content', {}) \
             .setdefault('environmental-variables', []).append(env_var)
         return self
@@ -195,15 +200,26 @@ class AppBuilder(ModuleBuilder):
             .setdefault('output-parameters', []).append(param)
         return self
 
-    def files(self, name, content):
+    def files(self, files: List[Tuple[str, str]]):
         """
-        Can be called multiple times to set a list of files.
+        Can be called multiple times to set list of files.
+        :param files: [(<file name>, <file content>),]
+        :return:
+        """
+        for name, content in files:
+            self.file(name, content)
+        return self
+
+    def file(self, name, content):
+        """
+        Can be called multiple times to set list of files.
         :param name:
         :param content:
         :return:
         """
         self.module.setdefault('content', {}) \
-            .setdefault('files', []).append([name, content])
+            .setdefault('files', []).append({'file-name': name,
+                                             'file-content': content})
         return self
 
     def script(self, content):
@@ -223,9 +239,18 @@ class AppBuilder(ModuleBuilder):
         return self
 
     def registry(self, resource_id):
-        self.module.setdefault('content', []) \
+        self.module.setdefault('content', {}) \
             .setdefault('private-registries', []) \
             .append(resource_id)
+        return self
+
+    def registry_and_cred(self, registry_id, cred_id):
+        self.module.setdefault('content', {}) \
+            .setdefault('private-registries', []) \
+            .append(registry_id)
+        self.module.setdefault('content', {}) \
+            .setdefault('registries-credentials', []) \
+            .append(cred_id)
         return self
 
     def build(self) -> dict:
@@ -239,6 +264,37 @@ class AppBuilder(ModuleBuilder):
             if r not in self.module['content']:
                 raise Exception('{} is missing in module["content"].'.format(r))
         return super(AppBuilder, self).build()
+
+
+class AppBuilderHelm(AppBuilder):
+    type = APP_TYPE_HELM
+
+    def __init__(self, base=None):
+        super().__init__(base)
+
+    def helm_repo(self, repo):
+        self.module.setdefault('content', {})['helm-repo-url'] = repo
+        return self
+
+    def helm_repo_creds(self, creds: str):
+        self.module.setdefault('content', {})['helm-repo-creds'] = creds
+        return self
+
+    def helm_chart_name(self, name):
+        self.module.setdefault('content', {})['helm-chart-name'] = name
+        return self
+
+    def chart_absolute_url(self, path):
+        self.module.setdefault('content', {})['helm-absolute-url'] = path
+        return self
+
+    def chart_version(self, version):
+        self.module.setdefault('content', {})['helm-chart-version'] = version
+        return self
+
+    def chart_values(self, values: str):
+        self.module.setdefault('content', {})['helm-chart-values'] = values
+        return self
 
 
 class AppBuilderK8s(AppBuilder):

@@ -29,6 +29,28 @@ def handle_response(response: Response):
         handle_HTTPErrorException(ex, response)
 
 
+def handle_HTTPErrorException(e: HTTPError, response: Response):
+    try:
+        json_msg = e.response.json()
+        message = json_msg.get('message')
+        if message is None:
+            error = json_msg.get('error')
+            message = error.get('code') + ' - ' + error.get('reason')
+    except:
+        try:
+            message = e.response.text
+        except:
+            message = str(e)
+    raise NuvlaError(message, response)
+
+
+def handle_response(response: Response):
+    try:
+        response.raise_for_status()
+    except HTTPError as e:
+        handle_HTTPErrorException(e, response)
+
+
 class User(ResourceBase):
     resource = 'user'
 

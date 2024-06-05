@@ -28,13 +28,12 @@ class Credential(ResourceBase):
     def id_by_name(self, name, filter=None) -> list:
         return super().id_by_name(name, filter=f"subtype='{self.subtype}'")
 
-    @classmethod
-    def build_template(cls, cred_data: dict, parent, name, description=None):
+    def build_template(self, cred_data: dict, parent, name, description=None):
         cred = {
             "name": name,
             "description": description or name,
             "template": {
-                "href": f"credential-template/{cls.subtype}",
+                "href": f"credential-template/{self.subtype}",
                 "parent": parent
             }
         }
