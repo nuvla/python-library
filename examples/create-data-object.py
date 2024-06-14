@@ -47,30 +47,33 @@ data_obj_api = DataObjectS3(nuvla)
 #
 # Create binary object on S3 and register it in Nuvla.
 #
+print("\nCreating binary object\n")
+# here is the file that acutally gets uploaded to S3
 content = open('data/african-lion.jpg', 'rb').read()
-
-object_path = 'africa/african-lion2.jpg'
+# here is the path where the file will be stored in S3
+object_path = 'africa/african-lion3.jpg'
+# here is the content type of the file
 content_type = 'image/jpg'
 
 def create_object(content, bucket: str, object_path: str, s3_cred_id: str, content_type: str, tags) -> str:
     try:
-        bin_object_id = data_obj_api.create(content, bucket, object_path, s3_cred_id,
+        object_id = data_obj_api.create(content, bucket, object_path, s3_cred_id,
                                             content_type=content_type,
                                             tags=tags)
     except NuvlaError as e:
         for arg in e.args:
             if 'data-object' in arg:
-                bin_object_id = arg.split(' ')[-1]
-                print('Object already exists, object id:', bin_object_id)
-                deleted_object_id = data_obj_api.delete(bin_object_id)
-                print('Deleted object id:', deleted_object_id)
-                bin_object_id = create_object(content, bucket, object_path, s3_cred_id, content_type, tags)
-                break   
+                object_id = arg.split(' ')[-1]
+                print(f'Object already exists, object id: {object_id}. Deleting and recreating.')
+                deleted_object_id = data_obj_api.delete(object_id)
+                # print('Deleted object id:', deleted_object_id)
+                object_id = create_object(content, bucket, object_path, s3_cred_id, content_type, tags)
+                break
         
-        return bin_object_id
+        return object_id
 
-    print('.png object id:', bin_object_id)
-    return bin_object_id
+    # print('.png object id:', object_id)
+    return object_id
 
 # Add binary object.
 # Bucket will be created if it doesn't exist.
@@ -78,7 +81,7 @@ bin_object_id = create_object(content=content, bucket=bucket, \
                               object_path=object_path, s3_cred_id=s3_cred_id, \
                               content_type=content_type, tags=["zoo", "africa", "lion"])
 
-print(f'.png object id: {bin_object_id}')
+# print(f'.png object id: {bin_object_id}')
 
 
 # Get object document.
@@ -86,12 +89,12 @@ obj_doc = data_obj_api.get(bin_object_id)
 pp(obj_doc)
 
 # Download object and store it locally to a file.
-local_fn = './data/local-african-lion.jpg'
-data_obj_api.get_to_file(bin_object_id, local_fn)
+local_filename = './data/local-african-lion.jpg'
+data_obj_api.get_to_file(bin_object_id, local_filename)
 # Verify checksum.
 assert hashlib.md5(content).hexdigest() \
-       == hashlib.md5(open(local_fn, 'rb').read()).hexdigest()
-os.unlink(local_fn)
+       == hashlib.md5(open(local_filename, 'rb').read()).hexdigest()
+os.unlink(local_filename)
 
 #
 # Create a text object on S3 and register it in Nuvla.
@@ -104,21 +107,24 @@ content_type = 'plain/text'
 # Add text object.
 # Bucket will be created if doesn't exist.
 
-str_object_id = create_object(content, bucket, object_path, s3_cred_id, content_type, tags=["zoo", "africa", "lion"])
+print("\nCreating text object\n")
+str_object_id = create_object(content=content, bucket=bucket, \
+                              object_path=object_path, s3_cred_id=s3_cred_id, \
+                              content_type=content_type, tags=["zoo", "africa", "lion"])
 
-print('.txt object id:', str_object_id)
+# print('.txt object id:', str_object_id)
 
 # Get object document.
 obj_doc = data_obj_api.get(str_object_id)
 pp(obj_doc)
 
 # Download object and store it locally to a file.
-local_fn = './data/local-african-lion.txt'
-data_obj_api.get_to_file(str_object_id, local_fn)
+local_filename = './data/local-african-lion.txt'
+data_obj_api.get_to_file(str_object_id, local_filename)
 # Verify checksum.
 assert hashlib.md5(content.encode()).hexdigest() \
-       == hashlib.md5(open(local_fn, 'r').read().encode()).hexdigest()
-os.unlink(local_fn)
+       == hashlib.md5(open(local_filename, 'r').read().encode()).hexdigest()
+os.unlink(local_filename)
 
 
 #

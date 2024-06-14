@@ -20,7 +20,7 @@ nuvla = Nuvla(debug=debug)
 # Login to Nuvla.
 #
 user_api = User(nuvla)
-user_api.login_password(username, password)
+user_api.login(username, password)
 
 #
 # Data record API object.
@@ -41,7 +41,9 @@ print('deleted data record:', dr_id)
 #
 # Add data record that describes an object on S3.
 #
-s3_infra_service_id = 'infrastructure-service/771fa0f1-a38d-400b-bad4-3f7600f069af'
+# s3_infra_service_id = 'infrastructure-service/771fa0f1-a38d-400b-bad4-3f7600f069af'
+s3_infra_service_id = 'infrastructure-service/09b08b49-2408-4b80-a7cc-73f420903fd5'
+
 data_record = {
     "infrastructure-service": s3_infra_service_id,
 
@@ -63,6 +65,7 @@ print('created data record:', dr_id)
 
 #
 # Delete data record.
+# OR this can be commented out to keep the data record.
 #
 assert dr_id == dr_api.delete(dr_id)
 print('deleted data record:', dr_id)
