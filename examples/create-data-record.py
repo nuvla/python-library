@@ -52,12 +52,14 @@ data_record = {
 
     "object": "african-lion.jpg",
     "bucket": "cloud.animals",
-    "content-type": "animals/lion",
 
+    "content": {
+        "content-type": "animals/lion",
+    },
     "bytes": 12499950,
     "platform": "S3",
 
-    "tags": ["zoo", "africa", "lion"]
+    "tags": ["zoo", "africa", "lion"],
 }
 dr_id = dr_api.add(data_record)
 print('created data record:', dr_id)
