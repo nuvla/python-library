@@ -54,7 +54,7 @@ data_record = {
     "bucket": "cloud.animals",
 
     "content": {
-        "content-type": "animals/lion",
+        "content-type": "animals/lion", # here is where the content type is defined and the "application/taska" can be added.
     },
     "bytes": 12499950,
     "platform": "S3",
