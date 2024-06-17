@@ -65,17 +65,6 @@ bucket = 'bucket-for-extract-project-demo-purposes-002'
 #
 data_obj_api = DataObjectS3(nuvla)
 
-#
-# Create binary object on S3 and register it in Nuvla.
-#
-print("\nCreating binary object\n")
-# here is the file that actually gets uploaded to S3
-content = open('data/african-lion.jpg', 'rb').read()
-# here is the path where the file will be stored in S3
-object_path = 'africa/african-lion3.jpg'
-# here is the content type of the file
-content_type = 'image/scary-lions'
-
 def generate_event(local_event_record: dict) -> str:
     '''
     Generate an event in Nuvla
@@ -106,6 +95,7 @@ def create_data_record(local_data_record: dict) -> str:
     try:
         dr_id_created = dr_api.add(local_data_record)
     except NuvlaError as e:
+        print(f'Failed to create data record: {e}')
         for arg in e.args:
             if 'data-record' in arg:
                 dr_id_created = arg.split(' ')[-1]
@@ -122,21 +112,36 @@ def create_data_record(local_data_record: dict) -> str:
 
 def create_data_object(local_content, local_bucket: str, local_object_path: str, local_s3_cred_id: str, local_content_type: str, local_tags) -> str:
     try:
-        object_id = data_obj_api.create(local_content, local_bucket, local_object_path, local_s3_cred_id,
-                                            content_type=local_content_type,
-                                            tags=local_tags)
+        object_id = data_obj_api.create(local_content, local_bucket, 
+                                        local_object_path, local_s3_cred_id,
+                                        content_type=local_content_type,
+                                        tags=local_tags)
     except NuvlaError as e:
+        print(f'Failed to create data object: {e}') 
         for arg in e.args:
             if 'data-object' in arg:
                 object_id = arg.split(' ')[-1]
-                print(f'Object already exists, object id: {object_id}. Deleting and recreating.')
+                print(f'\n\nObject already exists, object id: {object_id}. Deleting and recreating.')
                 deleted_object_id = data_obj_api.delete(object_id)
                 if deleted_object_id:
-                    print('Deleted object id:', deleted_object_id)
+                    print(f'Deleted object id: {deleted_object_id}')
                     object_id = create_data_object(local_content, local_bucket, local_object_path, local_s3_cred_id, local_content_type, local_tags)
+                    print(f'Created object id: {object_id}\n\n')
                     break
         return object_id
     return object_id
+
+#
+# Create binary object on S3 and register it in Nuvla.
+#
+print("\nCreating binary object\n")
+# here is the file that actually gets uploaded to S3
+content = open('data/african-lion.jpg', 'rb').read()
+# here is the path where the file will be stored in S3
+object_path = 'africa/african-lion3.jpg'
+# here is the content type of the file
+content_type = 'image/scary-lions'
+
 
 # Add binary object.
 # Bucket will be created if it doesn't exist.
@@ -178,6 +183,7 @@ data_record = {
 }
 
 # dr_id = dr_api.add(data_record)
+print('\n\ncreating data record\n\n')
 dr_id = create_data_record(data_record)
 print('created data record:', dr_id)
 pp(dr_api.get(dr_id))
@@ -218,7 +224,8 @@ for record in records:
         dr_api.get(record)['content']['resource']['href']
         print(f'New style data {record} record, probably should NOT delete it.')
     except KeyError:
-        print(f'Old style data {record} record, could delete it.')       
+        # print(f'Old style data {record} record, could delete it.') 
+        print(f'Deleted old style data record:', dr_api.delete(record))      
 # exit(1)
 
 # Create a text object on S3 and register it in Nuvla.
