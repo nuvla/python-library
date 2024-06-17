@@ -146,15 +146,7 @@ data_record = {
     "name": "African Lion",
     "object": object_path,
     "bucket": bucket,
-    "content": {
-      "resource": {
-        "href": bin_object_id,
-        "content": {
-          "content-type": content_type,
-        },
-        "state": "created",
-      }
-    },
+    "content-type": "animals/lion"
     "bytes": len(content),
     "platform": "S3",
     "tags": ["zoo", "africa", "lion", "whatevs"],
@@ -166,10 +158,13 @@ data_record = {
 event_record = {
     "category": "user",
     "content": {
-        "resource": {
-            "href": bin_object_id,
+      "resource": {
+        "href": bin_object_id,
+        "content": {
+          "content-type": content_type,
         },
-        "state": "created"
+        "state": "created",
+      }
     },
     "severity": "medium",
     "tags": data_record['tags'],
