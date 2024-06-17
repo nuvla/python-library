@@ -77,11 +77,11 @@ content_type = 'image/scary-lions'
 
 def generate_event(local_event_record) -> str:
     try:
-        event = nuvla.add('event', local_event_record)
+        local_event_record = nuvla.add('event', local_event_record)
     except NuvlaError:
         print('Failed to create event.')
     
-    return event
+    return local_event_record
 
 # should generate an event here as a data record was created
 # maybe this should be combined?
@@ -146,7 +146,7 @@ data_record = {
     "name": "African Lion",
     "object": object_path,
     "bucket": bucket,
-    "content-type": "animals/lion"
+    "content-type": "animals/lion",
     "bytes": len(content),
     "platform": "S3",
     "tags": ["zoo", "africa", "lion", "whatevs"],
@@ -155,11 +155,16 @@ data_record = {
     "and-another-field": "and-another-value",   
 }
 
+# dr_id = dr_api.add(data_record)
+dr_id = create_data_record(data_record)
+print('created data record:', dr_id)
+pp(dr_api.get(dr_id))
+
 event_record = {
     "category": "user",
     "content": {
       "resource": {
-        "href": bin_object_id,
+        "href": dr_id, # this must be the data record id
         "content": {
           "content-type": content_type,
         },
@@ -170,10 +175,6 @@ event_record = {
     "tags": data_record['tags'],
 }
 
-# dr_id = dr_api.add(data_record)
-dr_id = create_data_record(data_record)
-print('created data record:', dr_id)
-pp(dr_api.get(dr_id))
 event = generate_event(event_record)
 print('created event:', event)
 
@@ -184,12 +185,6 @@ data_obj_api.get_to_file(bin_object_id, local_filename)
 assert hashlib.md5(content).hexdigest() \
        == hashlib.md5(open(local_filename, 'rb').read()).hexdigest()
 os.unlink(local_filename)
-
-# get the data object id from the data record
-data_object_id = dr_api.get(dr_id)['content']['resource']['href']
-print('data object id:', data_object_id)
-# print the data object
-pp(data_obj_api.get(data_object_id))
 
 # get a list of data records
 records = dr_api.id_by_name('African Lion', filter=f"tags='lion'")
