@@ -4,6 +4,14 @@
 
 ## Released
 
+## [4.0.2](https://github.com/nuvla/python-library/compare/4.0.1...4.0.2) (2024-08-21)
+
+
+### Dependencies
+
+* requests version &gt;= 2.32.3 and updated other dependencies ([6ae74d6](https://github.com/nuvla/python-library/commit/6ae74d602bf28d293fa4dd94967b879bf39afc00))
+* Update indirect dependencies ([a8bc9d3](https://github.com/nuvla/python-library/commit/a8bc9d3cc9b166360b3685511ca5d105e5dba7ba))
+
 ## [4.0.1](https://github.com/nuvla/python-library/compare/4.0.0...4.0.1) (2024-05-08)
 
 

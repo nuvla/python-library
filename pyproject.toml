@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nuvla-api"
-version = "4.0.1"
+version = "4.0.2"
 description = "Nuvla APIServer python client library"
 license = "Apache-2.0"
 authors = ["SixSq SA <support@sixsq.com>"]
@@ -22,7 +22,7 @@ packages = [{include = "nuvla"}]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-requests = "^2.31.0"
+requests = "^2.32.3"
 pyyaml = "^6.0.1"
 
 
