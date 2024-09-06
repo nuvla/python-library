@@ -485,26 +485,26 @@ class Api(object):
                     selected fields are not present in the data argument (e.g description, value)
         :type       select: str or list of str
 
-        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :return:    A CimiResource object
         :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
         return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs))
 
     def edit_patch(self, resource_id, data, **kwargs) -> CimiResource:
-        """ Edit a CIMI resource by it's resource id
+        """ Edit a CIMI resource by it's resource id with JSON Patch format (RFC 6902)
 
         :param      resource_id: The id of the resource to edit
         :type       resource_id: str
 
-        :param      data: List of edit patches to apply
+        :param      data: List of edit patches to apply (in JSON Patch format)
         :type       data: list
 
         :keyword    select: Cimi select parameter, used to delete an existing attribute from a cimi resource when the
                     selected fields are not present in the data argument (e.g description, value)
         :type       select: str or list of str
 
-        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :return:    A CimiResource object
         :rtype:     CimiResource
         """
         resource = self.get(resource_id=resource_id)
