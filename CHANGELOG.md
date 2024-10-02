@@ -4,6 +4,23 @@
 
 ## Released
 
+## [4.2.0](https://github.com/nuvla/python-library/compare/4.1.0...4.2.0) (2024-10-02)
+
+
+### Features
+
+* add support for Python 3.12 ([#57](https://github.com/nuvla/python-library/issues/57)) ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
+
+### Dependencies
+
+* updated indirect dependencies ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
+
+### Code Refactoring
+
+* improved creation of namespace package ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
 ## [4.1.0](https://github.com/nuvla/python-library/compare/4.0.2...4.1.0) (2024-09-06)
 
 
