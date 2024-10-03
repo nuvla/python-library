@@ -18,11 +18,12 @@ classifiers = [
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development"]
 packages = [{include = "nuvla"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = "^3.9"
 requests = "^2.32.3"
 pyyaml = "^6.0.1"
 
