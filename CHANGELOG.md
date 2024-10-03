@@ -4,6 +4,13 @@
 
 ## Released
 
+## [4.2.1](https://github.com/nuvla/python-library/compare/4.2.0...4.2.1) (2024-10-03)
+
+
+### Minor Changes
+
+* **deps:** allow any 3.x python version above 3.9 ([40058b1](https://github.com/nuvla/python-library/commit/40058b17d69a0556508dadb44849848d5b00ca27))
+
 ## [4.2.0](https://github.com/nuvla/python-library/compare/4.1.0...4.2.0) (2024-10-02)
 
 
