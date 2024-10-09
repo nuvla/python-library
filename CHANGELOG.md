@@ -4,6 +4,43 @@
 
 ## Released
 
+## [4.2.1](https://github.com/nuvla/python-library/compare/4.2.0...4.2.1) (2024-10-03)
+
+
+### Minor Changes
+
+* **deps:** allow any 3.x python version above 3.9 ([40058b1](https://github.com/nuvla/python-library/commit/40058b17d69a0556508dadb44849848d5b00ca27))
+
+## [4.2.0](https://github.com/nuvla/python-library/compare/4.1.0...4.2.0) (2024-10-02)
+
+
+### Features
+
+* add support for Python 3.12 ([#57](https://github.com/nuvla/python-library/issues/57)) ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
+
+### Dependencies
+
+* updated indirect dependencies ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
+
+### Code Refactoring
+
+* improved creation of namespace package ([e91ddbe](https://github.com/nuvla/python-library/commit/e91ddbe69afe53031930d3714ed62b75c645483d))
+
+## [4.1.0](https://github.com/nuvla/python-library/compare/4.0.2...4.1.0) (2024-09-06)
+
+
+### Features
+
+* **edit_patch:** Support for edit with JSON Patch format (RFC 6902) ([#55](https://github.com/nuvla/python-library/issues/55)) ([cd725ef](https://github.com/nuvla/python-library/commit/cd725ef03764a739b5e7d488665637fd4ff6d38c))
+
+
+### Continuous Integration
+
+* **release:** updated release-please-action ([790018e](https://github.com/nuvla/python-library/commit/790018e01fc257a66ca5f8eaca01fdcde62b0558))
+* **unittest:** update GH actions deps ([6c9b90f](https://github.com/nuvla/python-library/commit/6c9b90f6bd89b0fa6ddaf5390873740682f7b502))
+
 ## [4.0.2](https://github.com/nuvla/python-library/compare/4.0.1...4.0.2) (2024-08-21)
 
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nuvla-api"
-version = "4.0.2"
+version = "4.2.1"
 description = "Nuvla APIServer python client library"
 license = "Apache-2.0"
 authors = ["SixSq SA <support@sixsq.com>"]
@@ -17,14 +17,15 @@ classifiers = [
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development"]
 packages = [{include = "nuvla"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = "^3.9"
 requests = "^2.32.3"
 pyyaml = "^6.0.1"
-
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^8.0.2"

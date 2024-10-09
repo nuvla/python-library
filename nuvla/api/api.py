@@ -450,9 +450,9 @@ class Api(object):
         uri = self._cimi_get_uri(resource_id, resource_type)
         return self._cimi_request('POST', uri, params=params, json=json, data=data)
 
-    def _cimi_put(self, resource_id=None, resource_type=None, params=None, json=None, data=None):
+    def _cimi_put(self, resource_id=None, resource_type=None, params=None, json=None, data=None, headers=None):
         uri = self._cimi_get_uri(resource_id, resource_type)
-        return self._cimi_request('PUT', uri, params=params, json=json, data=data)
+        return self._cimi_request('PUT', uri, params=params, json=json, data=data, headers=headers)
 
     def _cimi_delete(self, resource_id=None):
         return self._cimi_request('DELETE', resource_id)
@@ -485,10 +485,30 @@ class Api(object):
                     selected fields are not present in the data argument (e.g description, value)
         :type       select: str or list of str
 
-        :return:    A CimiResponse object which should contain the attributes 'status', 'resource-id' and 'message'
+        :return:    A CimiResource object
         :rtype:     CimiResource
         """
         return CimiResource(self._cimi_put(resource_id=resource_id, json=data, params=kwargs))
+
+    def edit_patch(self, resource_id, data, **kwargs) -> CimiResource:
+        """ Edit a CIMI resource by it's resource id with JSON Patch format (RFC 6902)
+
+        :param      resource_id: The id of the resource to edit
+        :type       resource_id: str
+
+        :param      data: List of edit patches to apply (in JSON Patch format)
+        :type       data: list
+
+        :keyword    select: Cimi select parameter, used to delete an existing attribute from a cimi resource when the
+                    selected fields are not present in the data argument (e.g description, value)
+        :type       select: str or list of str
+
+        :return:    A CimiResource object
+        :rtype:     CimiResource
+        """
+        resource = self.get(resource_id=resource_id)
+        return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs,
+                                           headers={'content-type': 'application/json-patch+json'}))
 
     def delete(self, resource_id) -> CimiResponse:
         """ Delete a CIMI resource by it's resource id
