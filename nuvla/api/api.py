@@ -506,8 +506,7 @@ class Api(object):
         :return:    A CimiResource object
         :rtype:     CimiResource
         """
-        resource = self.get(resource_id=resource_id)
-        return CimiResource(self._cimi_put(resource_id=resource.id, json=data, params=kwargs,
+        return CimiResource(self._cimi_put(resource_id=resource_id, json=data, params=kwargs,
                                            headers={'content-type': 'application/json-patch+json'}))
 
     def delete(self, resource_id) -> CimiResponse:
