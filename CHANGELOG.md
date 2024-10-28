@@ -4,6 +4,13 @@
 
 ## Released
 
+## [4.2.2](https://github.com/nuvla/python-library/compare/4.2.1...4.2.2) (2024-10-28)
+
+
+### Bug Fixes
+
+* **edit_patch:** Remove unnecessary retrieve of resource ([#60](https://github.com/nuvla/python-library/issues/60)) ([fb1fd27](https://github.com/nuvla/python-library/commit/fb1fd270a63e6408e40ea6b354604b7ddc0b1d4b))
+
 ## [4.2.1](https://github.com/nuvla/python-library/compare/4.2.0...4.2.1) (2024-10-03)
 
 
