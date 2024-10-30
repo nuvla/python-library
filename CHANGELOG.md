@@ -4,6 +4,13 @@
 
 ## Released
 
+## [4.2.3](https://github.com/nuvla/python-library/compare/4.2.2...4.2.3) (2024-10-30)
+
+
+### Bug Fixes
+
+* **syntax-warn:** avoid syntax warning in the logs ([2f622f8](https://github.com/nuvla/python-library/commit/2f622f80e76443a3ec5cc9b5a482d1607771c67e))
+
 ## [4.2.2](https://github.com/nuvla/python-library/compare/4.2.1...4.2.2) (2024-10-28)
 
 
