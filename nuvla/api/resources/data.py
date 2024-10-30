@@ -21,9 +21,9 @@ class DataObjectS3(ResourceBase):
     def __init__(self, nuvla: Nuvla):
         super().__init__(nuvla)
 
-    def create(self, content: Union[str, bytes], bucket, object_path, s3_cred_id,
+    def create(self, content: Union[str, bytes, None], bucket, object_path, s3_cred_id,
                content_type='text/plain', name=None, description=None,
-               tags: Optional[list]=None, md5sum: Optional[str]=None) -> str:
+               tags: Optional[list] = None, md5sum: Optional[str] = None) -> str:
         """Stores `content` in S3 defined by `s3_cred_id` and registers the
         object as data-object in Nuvla. Returns data-object resource ID.
         `content` and `content_type` should match (e.g. str and plain/text,
@@ -38,8 +38,8 @@ class DataObjectS3(ResourceBase):
                 "resource-type": "data-object-template",
                 "content-type": content_type,
                 "object": object_path,
+                'bytes': len(content) if content else 0,
                 "bucket": bucket,
-                "bytes": len(content),
                 "href": "data-object-template/generic"
             }
         }
@@ -53,10 +53,12 @@ class DataObjectS3(ResourceBase):
         # Upload data.
         data_object = self.nuvla.get(data_object_id)
         response = self.nuvla.operation(data_object, "upload")
-        upload_url = response.data['uri']
-        headers = {"content-type": content_type}
-        response = requests.put(upload_url, data=content, headers=headers)
-        response.raise_for_status()
+
+        if content is not None:
+            upload_url = response.data['uri']
+            headers = {"content-type": content_type}
+            response = requests.put(upload_url, data=content, headers=headers)
+            response.raise_for_status()
 
         # Set object is ready.
         data_object = self.nuvla.get(data_object_id)
