@@ -139,54 +139,59 @@ class Deployment(ResourceBase):
         """
         data = {}
         if sets:
-            for e in sets:
-                if 'id' in e:
-                    _id = e['id']
-                    res = self.nuvla.get(_id)
-                    print(dir(res))
-                    if not res.data:
-                        raise ResourceNotFound('data-set resource not found: {}'.format(_id))
-                    if 'data-record-filter' in res.data:
-                        data_filter = res.data['data-record-filter']
-                        data.setdefault('records', {'filters': []})
-                        data['records']['filters'] \
-                            .append({'filter': data_filter,
-                                     'data-type': 'data-record',
-                                     'time-start': e.get('time-start'),
-                                     'time-end': e.get('time-end')})
-                    if 'data-object-filter' in res.data:
-                        data_filter = res.data['data-object-filter']
-                        data.setdefault('objects', {'filters': []})
-                        data['objects']['filters'] \
-                            .append({'filter': data_filter,
-                                     'data-type': 'data-object',
-                                     'time-start': e.get('time-start'),
-                                     'time-end': e.get('time-end')})
-                elif ('filter' in e) and ('data-type' in e):
-                    data_type = e['data-type']
-                    if data_type == 'data-record':
-                        data.setdefault('records', {'filters': []})
-                        data['records']['filters'] \
-                            .append({'filter': e['filter'],
-                                     'data-type': data_type,
-                                     'time-start': e.get('time-start'),
-                                     'time-end': e.get('time-end')})
-                    elif data_type == 'data-object':
-                        data.setdefault('objects', {'filters': []})
-                        data['objects']['filters'] \
-                            .append({'filter': e['filter'],
-                                     'data-type': data_type,
-                                     'time-start': e.get('time-start'),
-                                     'time-end': e.get('time-end')})
+            self._process_sets(sets, data)
         if records:
-            data.setdefault('records', {})
-            data['records'].update({'records-ids': records})
+            self._add_records(data, records)
         if objects:
-            data.setdefault('objects', {})
-            data['objects'].update({'objects-ids': objects})
-
+            self._add_objects(data, objects)
         if data:
             deployment.update({'data': data})
+
+    def _process_sets(self, sets, data):
+        for e in sets:
+            if 'id' in e:
+                self._process_set_by_id(e, data)
+            elif 'filter' in e and 'data-type' in e:
+                self._process_set_by_filter(e, data)
+
+    def _process_set_by_id(self, e, data):
+        _id = e['id']
+        res = self.nuvla.get(_id)
+        if not res.data:
+            raise ResourceNotFound(f'data-set resource not found: {_id}')
+        if 'data-record-filter' in res.data:
+            self._add_filter(data, 'records', res.data['data-record-filter'],
+                             e, 'data-record')
+        if 'data-object-filter' in res.data:
+            self._add_filter(data, 'objects', res.data['data-object-filter'],
+                             e, 'data-object')
+
+    def _process_set_by_filter(self, e, data):
+        data_type = e['data-type']
+        if data_type == 'data-record':
+            self._add_filter(data, 'records', e['filter'], e)
+        elif data_type == 'data-object':
+            self._add_filter(data, 'objects', e['filter'], e)
+
+    @staticmethod
+    def _add_filter(data, key, data_filter, e, data_type=None):
+        data.setdefault(key, {'filters': []})
+        data[key]['filters'].append({
+            'filter': data_filter,
+            'data-type': data_type or e['data-type'],
+            'time-start': e.get('time-start'),
+            'time-end': e.get('time-end')
+        })
+
+    @staticmethod
+    def _add_records(data, records):
+        data.setdefault('records', {})
+        data['records'].update({'records-ids': records})
+
+    @staticmethod
+    def _add_objects(data, objects):
+        data.setdefault('objects', {})
+        data['objects'].update({'objects-ids': objects})
 
     def create(self, module_id, infra_cred_id=None, data_sets=None,
                data_records=None, data_objects=None) -> CimiResource:
@@ -324,7 +329,8 @@ class Deployment(ResourceBase):
         # Get the resource. It may contain the logs.
         return self.nuvla.get(logs.id)
 
-    def _template_interpolation(self, string: str, params: dict) -> str:
+    @staticmethod
+    def _template_interpolation(string: str, params: dict) -> str:
         """Returns `string` interpolated by the values from `params`.
         Returns an empty string, if either of those is emtpy: `string`, `params`
         or the value of the required interpolation key.
@@ -336,8 +342,8 @@ class Deployment(ResourceBase):
         groups = re.findall(r'(\${.*?})', string)
         if len(groups) > 0 and not params:
             raise ValueError('no substitutions provided.')
-        groups_keys = list(map(lambda x: x.replace('${','').replace('}',''),
-                            groups))
+        groups_keys = list(map(lambda x: x.replace('${', '').replace('}', ''),
+                               groups))
         for k in groups_keys:
             # If the interpolant from the string (key in groups_keys) is not in
             # the list of parameters (params.keys()), interpolation is not possible.
@@ -345,7 +351,7 @@ class Deployment(ResourceBase):
                 raise ValueError(f'{k} is missing in params')
             if not params[k]:
                 return ''
-            string = re.compile('\${' + k + '}').sub(params[k], string)
+            string = re.compile(r'\${' + k + '}').sub(params[k], string)
         return string
 
     def get_url(self, deployment: CimiResource, name) -> Union[str, None]:

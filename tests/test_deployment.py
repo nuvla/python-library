@@ -1,4 +1,4 @@
-import random
+from random import SystemRandom
 import string
 from unittest import TestCase
 from unittest.mock import Mock
@@ -7,7 +7,8 @@ from nuvla.api.resources.deployment import Deployment
 
 
 def rand_str(n):
-    return ''.join(random.choice(string.ascii_lowercase) for i in range(n))
+    return ''.join(
+        SystemRandom().choice(string.ascii_lowercase) for _ in range(n))
 
 
 class DeploymentTest(TestCase):
@@ -107,27 +108,25 @@ class DeploymentTest(TestCase):
         data_filters_in(dpl, ['records', 'objects'])
 
     def test_template_interpolation(self):
-        dpl_api = Deployment(Mock())
-
         # Empty inputs.
-        assert '' == dpl_api._template_interpolation('', {})
-        assert '' == dpl_api._template_interpolation('', {'foo': 'bar'})
+        assert '' == Deployment._template_interpolation('', {})
+        assert '' == Deployment._template_interpolation('', {'foo': 'bar'})
 
-        string = 'http://${foo}:${bar.baz}/?${baz-foo}'
+        text = 'https://${foo}:${bar.baz}/?${baz-foo}'
 
         # No substitution keys.
-        self.assertRaises(ValueError, dpl_api._template_interpolation,
-                          *(string, {}))
+        self.assertRaises(ValueError, Deployment._template_interpolation,
+                          *(text, {}))
 
         # Missing substitution key in params.
-        self.assertRaises(ValueError, dpl_api._template_interpolation,
-                          *(string, {'foo': 'FOO', 'bar.baz': 'BAR.BAZ'}))
+        self.assertRaises(ValueError, Deployment._template_interpolation,
+                          *(text, {'foo': 'FOO', 'bar.baz': 'BAR.BAZ'}))
 
         # All required keys, but one empty substitution key in params.
         params = {'foo': '', 'bar.baz': 'BAR.BAZ', 'baz-foo': 'BAZ-FOO'}
-        assert '' == dpl_api._template_interpolation(string, params)
+        assert '' == Deployment._template_interpolation(text, params)
 
         # Success.
         params = {'foo': 'FOO', 'bar.baz': 'BAR.BAZ', 'baz-foo': 'BAZ-FOO'}
-        assert 'http://FOO:BAR.BAZ/?BAZ-FOO' == \
-               dpl_api._template_interpolation(string, params)
+        assert 'https://FOO:BAR.BAZ/?BAZ-FOO' == \
+               Deployment._template_interpolation(text, params)
