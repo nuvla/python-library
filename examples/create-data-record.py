@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import random
+from pprint import pprint as pp
 from nuvla.api import Api as Nuvla
 from nuvla.api.resources.data import DataRecord
 from nuvla.api.resources.user import User
@@ -20,7 +22,7 @@ nuvla = Nuvla(debug=debug)
 # Login to Nuvla.
 #
 user_api = User(nuvla)
-user_api.login_password(username, password)
+user_api.login(username, password)
 
 #
 # Data record API object.
@@ -41,28 +43,38 @@ print('deleted data record:', dr_id)
 #
 # Add data record that describes an object on S3.
 #
-s3_infra_service_id = 'infrastructure-service/771fa0f1-a38d-400b-bad4-3f7600f069af'
+# s3_infra_service_id = 'infrastructure-service/09b08b49-2408-4b80-a7cc-73f420903fd5'
+cred_doc = nuvla.get(s3_cred_id) 
+print('credential doc:', cred_doc.data['parent'])
+s3_infra_service_id=cred_doc.data['parent']
+if not s3_infra_service_id:
+    print('No infrastructure service found for the credential. Exiting.')
+    exit(1)
+    
+bin_object_id = 'data-object/1-2-3-4-5'
+content_type = 'animals/african-lion'
+
 data_record = {
     "infrastructure-service": s3_infra_service_id,
 
     "description": "Lions in Africa",
     "name": "African Lion",
-
     "object": "african-lion.jpg",
     "bucket": "cloud.animals",
-    "content-type": "animals/lion",
-
-    "bytes": 12499950,
+    "content-type": "animals/lion", # here is where the content type is defined and the "application/taska" can be added.
+    "bytes": random.randint(1000, 100000),
     "platform": "S3",
-
-    "tags": ["zoo", "africa", "lion"]
+    "another-field": "another-value",  # this field will be ignored
+    "tags": ["zoo", "africa", "lion", "whatevs"],
 }
 dr_id = dr_api.add(data_record)
 print('created data record:', dr_id)
 
+pp(dr_api.get(dr_id))
 
 #
 # Delete data record.
+# OR this can be commented out to keep the data record.
 #
 assert dr_id == dr_api.delete(dr_id)
 print('deleted data record:', dr_id)
