@@ -74,11 +74,11 @@ data_record = {
 
     "object": "african-lion.jpg",
     "bucket": "cloud.animals",
-    "content-type": "animals/lion",
-
+    "content": {
+        "content-type": "animals/lion", # here is where the content type is defined and the "application/taska" can be added.
+    },
     "bytes": random.randint(1000, 100000),
     "platform": "S3",
-
     "another-field": "another-value",
 
     "yet-another-field": "yet-another-value",

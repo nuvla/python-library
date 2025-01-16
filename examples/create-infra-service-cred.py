@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import yaml
+from pprint import pprint
+
 from nuvla.api import Api as Nuvla
 from nuvla.api.resources.credential import (CredentialK8s,
                                             CredentialS3,
@@ -13,7 +16,12 @@ username, password = nuvla_conf_user_pass()
 nuvla = Nuvla()
 # nuvla = Nuvla(endpoint='https://nuvla.io', insecure=True)
 
-nuvla.login_password(username, password)
+
+userpass = {"href" : "session-template/password",
+         "username" : username,
+         "password" : password
+         }
+nuvla.login(userpass)
 
 # Fake infra service ID to which all credentials will be attached.
 infra_service_id = "infrastructure-service/1-2-3-4-5"
@@ -34,8 +42,18 @@ cred_k8s = CredentialK8s(nuvla)
 #
 #k8s_cred_id = cred_k8s.create(ca, cert, key, infra_service_id, "My K8s creds")
 
+def read_yaml_file(filepath):
+    with open(filepath, 'r') as file:
+        try:
+            return yaml.safe_load(file)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+config = read_yaml_file('data/example-k8s-config.yaml')
+print(config)
+
 k8s_cred_id = cred_k8s \
-    .create_from_config('data/example-k8s-config.yaml', infra_service_id,
+    .create_from_config(config, infra_service_id,
                         context='first-k8s-cluster-user', name='My K8s creds')
 print('Kubernetes creds: ', k8s_cred_id)
 
